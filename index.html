@@ -671,28 +671,54 @@
             // tidak lengkap). Tetap mensyaratkan minimal ada digit asli, supaya
             // tidak salah tangkap teks biasa.
             const isBankAccount = (str) => /[\d\*\.\s\-xX]{5,}/.test(str) && (str.match(/\d/g) || []).length >= 2;
-            const isBankName = (str) => /bank|bca|bri|mandiri|bni|bsi|cimb/i.test(str);
-            
-            // Auto-koreksi nama bank yang tercampur inisial (contoh: "YA BANKBRI" -> "BANK BRI")
+
+            // Toleransi typo OCR umum: huruf "BRI" kadang terbaca "BERI" atau
+            // "8RI" karena kemiripan bentuk font pada struk watermark.
+            const isBankName = (str) => /bank|bca|\bbri\b|beri|mandiri|bni|bsi|cimb/i.test(str);
+
+            // Auto-koreksi nama bank yang tercampur inisial avatar (mis. "G BANK
+            // BRI", "YA BANKBERI") jadi format bersih "BANK BRI". Cek pola typo
+            // "BERI" SEBELUM "BRI" murni supaya tidak salah urutan pencocokan.
             const cleanBankName = (str) => {
                 let s = str.toUpperCase();
-                if(s.includes('BRI')) return 'BANK BRI';
-                if(s.includes('BCA')) return 'BANK BCA';
-                if(s.includes('MANDIRI')) return 'BANK MANDIRI';
-                if(s.includes('BNI')) return 'BANK BNI';
+                if (s.includes('BERI') || s.includes('BRI')) return 'BANK BRI';
+                if (s.includes('BCA')) return 'BANK BCA';
+                if (s.includes('MANDIRI')) return 'BANK MANDIRI';
+                if (s.includes('BNI')) return 'BANK BNI';
                 return str;
             };
 
             // --- Parsing Blok Pengirim ---
             // Catatan: nomor rekening TIDAK ditebak ulang formatnya, ditampilkan
             // apa adanya hasil OCR (hanya titik->bintang) agar user yang koreksi manual.
-            let pNama = "", pRek = "";
+            // pBank ditangkap juga (meski tidak dipakai di form saat ini) supaya
+            // baris nama bank pengirim tidak salah ditangkap sebagai nama orang.
+            // Bersihkan hasil OCR baris rekening: ambil dari digit pertama sampai
+            // digit terakhir di baris itu (apa adanya), lalu ganti GRUP HURUF di
+            // tengahnya (kemungkinan salah baca tanda bintang sensor "****")
+            // menjadi tanda bintang, supaya tidak terpotong di karakter pertama
+            // yang tidak dikenali regex sempit sebelumnya.
+            const cleanRekeningOcr = (str) => {
+                // Potong dari digit pertama sampai digit terakhir saja (buang
+                // kata lain yang mungkin ikut tertangkap di awal/akhir baris)
+                const firstDigit = str.search(/\d/);
+                const lastDigit = str.length - 1 - [...str].reverse().join('').search(/\d/);
+                if (firstDigit === -1) return str.trim();
+                let core = str.substring(firstDigit, lastDigit + 1);
+                // Grup huruf (bukan digit/spasi/bintang) di tengah -> jadi "****"
+                core = core.replace(/[A-Za-z]+/g, '****');
+                // Titik juga dianggap sensor (format lama) -> jadi bintang
+                core = core.replace(/\./g, '*');
+                return core.trim();
+            };
+
+            let pNama = "", pRek = "", pBank = "";
             for (let item of pengirimData) {
                 if (isBankAccount(item) && pRek === "") {
-                    let matchResult = item.match(/[\d\*\.\s\-xX]{5,}/);
-                    let rawRek = matchResult ? matchResult[0].trim() : item.trim();
-                    pRek = rawRek.replace(/\./g, '*');
-                } else if (!isBankName(item) && item.length > 3 && pNama === "") {
+                    pRek = cleanRekeningOcr(item);
+                } else if (isBankName(item) && pBank === "") {
+                    pBank = cleanBankName(item);
+                } else if (item.length > 3 && pNama === "") {
                     pNama = cleanName(item);
                 }
             }
@@ -705,7 +731,7 @@
                 for (let item of pengirimData) {
                     if (isBankName(item)) continue;
                     if ((item.match(/\d/g) || []).length >= 2) {
-                        pRek = item.trim().replace(/\./g, '*');
+                        pRek = cleanRekeningOcr(item);
                         break;
                     }
                 }
@@ -715,9 +741,7 @@
             let tNama = "", tRek = "", tBank = "";
             for (let item of tujuanData) {
                 if (isBankAccount(item) && tRek === "") {
-                    // Jaga format spasi/strip/bintang asli dari gambar
-                    let matchResult = item.match(/[\d\*\.\s\-xX]{5,}/);
-                    tRek = matchResult ? matchResult[0].trim().replace(/\./g, '*') : item.trim();
+                    tRek = cleanRekeningOcr(item);
                 } else if (isBankName(item) && tBank === "") {
                     tBank = cleanBankName(item);
                 } else if (item.length > 3 && tNama === "") {
@@ -730,7 +754,7 @@
                 for (let item of tujuanData) {
                     if (isBankName(item)) continue;
                     if ((item.match(/\d/g) || []).length >= 2) {
-                        tRek = item.trim().replace(/\./g, '*');
+                        tRek = cleanRekeningOcr(item);
                         break;
                     }
                 }
