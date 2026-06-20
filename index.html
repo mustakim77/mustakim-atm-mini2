@@ -119,7 +119,7 @@
             border: 1px solid #e2e8f0;
         }
         .receipt-center { text-align: center; margin-bottom: 10px; }
-        .receipt-center h3 { font-size: 15px; font-weight: bold; margin-bottom: 2px; }
+        .receipt-center h3 { font-size: 13px; font-weight: bold; margin-bottom: 2px; letter-spacing: 0.3px; }
         .receipt-center p { font-size: 11px; }
         .receipt-line { border-top: 1px dashed #94a3b8; margin: 8px 0; }
         .receipt-row { display: flex; justify-content: space-between; gap: 6px; margin-bottom: 6px; }
@@ -693,21 +693,44 @@
             // pBank ditangkap juga (meski tidak dipakai di form saat ini) supaya
             // baris nama bank pengirim tidak salah ditangkap sebagai nama orang.
             // Bersihkan hasil OCR baris rekening: ambil dari digit pertama sampai
-            // digit terakhir di baris itu (apa adanya), lalu ganti GRUP HURUF di
+            // digit terakhir di baris itu (apa adanya), lalu rapikan bagian
             // tengahnya (kemungkinan salah baca tanda bintang sensor "****")
-            // menjadi tanda bintang, supaya tidak terpotong di karakter pertama
-            // yang tidak dikenali regex sempit sebelumnya.
+            // jadi format standar bank Indonesia: "XXXX **** **** XXX"
+            // (4 digit awal + 2 grup bintang + sisa digit akhir).
             const cleanRekeningOcr = (str) => {
                 // Potong dari digit pertama sampai digit terakhir saja (buang
                 // kata lain yang mungkin ikut tertangkap di awal/akhir baris)
                 const firstDigit = str.search(/\d/);
-                const lastDigit = str.length - 1 - [...str].reverse().join('').search(/\d/);
+                const lastDigitFromEnd = [...str].reverse().join('').search(/\d/);
                 if (firstDigit === -1) return str.trim();
+                const lastDigit = str.length - 1 - lastDigitFromEnd;
                 let core = str.substring(firstDigit, lastDigit + 1);
-                // Grup huruf (bukan digit/spasi/bintang) di tengah -> jadi "****"
-                core = core.replace(/[A-Za-z]+/g, '****');
-                // Titik juga dianggap sensor (format lama) -> jadi bintang
-                core = core.replace(/\./g, '*');
+
+                // Kalau core HANYA berisi digit, spasi, dan/atau tanda bintang
+                // (tidak ada huruf sampah) -> ini rekening BERSIH, baik yang
+                // memang sudah tersensor rapi (mis. "2216 **** **** 501") atau
+                // yang memang tidak disensor sama sekali (mis. rekening tujuan
+                // "3843 0100 4391 505"). JANGAN diubah/disensor ulang.
+                if (/^[\d\*\s]+$/.test(core)) {
+                    return core.trim().replace(/\s+/g, ' ');
+                }
+
+                // Sampai sini berarti core mengandung huruf (kemungkinan salah
+                // baca tanda bintang sensor oleh OCR). Susun ulang jadi format
+                // baku bank Indonesia "XXXX **** **** XXX" dari digit yang
+                // berhasil terbaca, HANYA jika digitnya cukup (>=6) untuk pola
+                // itu masuk akal sebagai rekening tersensor.
+                const allDigits = core.match(/\d/g) || [];
+                if (allDigits.length >= 6) {
+                    const depan = allDigits.slice(0, 4).join('');
+                    const belakang = allDigits.slice(-3).join('');
+                    return `${depan} **** **** ${belakang}`;
+                }
+
+                // Fallback: digit terlalu sedikit untuk pola standar, tampilkan
+                // apa adanya (huruf acak dirapikan jadi satu blok bintang)
+                // supaya user tetap bisa menilai & mengoreksi manual.
+                core = core.replace(/[A-Za-z\.\-]+/g, ' **** ').replace(/\s+/g, ' ');
                 return core.trim();
             };
 
@@ -925,8 +948,8 @@
             let t = "\x1B\x40"; // Initialize printer
             t += "\x1B\x61\x01"; // Align center
             t += "\x1B\x21\x10"; // Font: double height (judul lebih jelas)
-            t += "MUSTAKIM\nATM MINI\n";
-            t += "\x1B\x21\x00"; // Font normal
+            t += "MUSTAKIM MINI ATM\n";
+            t += "\x1B\x21\x00"; // Font normal (reset eksplisit sebelum lanjut)
             t += "BUKTI TRANSFER\n";
             t += line + "\n";
 
@@ -956,8 +979,13 @@
             t += "\x1B\x61\x01"; // Align center
             t += "Transaksi berhasil\n";
             t += "Terima kasih telah\nmenggunakan layanan kami\n";
-            t += "\n\n\n"; // feed sebelum potong kertas manual
-            t += "\x1D\x56\x42\x00"; // GS V B 0 -> partial cut (jika printer support)
+            t += "\n"; // feed secukupnya saja sebelum sobek manual
+            // Catatan: perintah potong otomatis (GS V) SENGAJA tidak dikirim.
+            // MP-58A1 dan kebanyakan printer thermal 58mm generik tidak
+            // dilengkapi cutter mekanis (potong manual oleh pengguna), dan
+            // mengirim command itu ke printer yang tidak support bisa membuat
+            // printer melakukan feed tambahan yang tidak perlu (kertas kosong
+            // panjang) karena command tidak dikenali dan dianggap data lain.
 
             return t;
         }
