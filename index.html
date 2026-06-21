@@ -444,11 +444,11 @@
                 labelUploadJudul: 'Upload Bukti Token PLN', labelUploadSub: 'Foto screenshot bukti beli token (DANA, SPay, BRImo, OVO, dll)',
                 labelPengirim: 'PEMBAYAR', 
                 labelPengirimNama: 'Nama Pelanggan', 
-                labelPengirimRek: 'Rekening/Sumber Dana',
+                labelPengirimRek: 'Sumber Dana',
                 labelTujuan: 'PLN', 
                 labelTujuanNama: 'ID Pelanggan', 
-                labelTujuanRek: 'Jumlah kWH',
-                labelTujuanBank: 'Pembayaran',
+                labelTujuanRek: 'Jumlah Daya',
+                labelTujuanBank: 'Produk',
                 showNoPelanggan: true, judulStruk: 'STRUK TOKEN LISTRIK'
             },
             tagihan: {
@@ -491,10 +491,10 @@
                 document.getElementById('label-out-ref').innerText = 'ID TRX';
 
                 // Ganti Label Khusus Struk PLN agar seperti aslinya
-                document.getElementById('label-out-pengirim-nama').innerText = 'NAMA';
+                document.getElementById('label-out-pengirim-nama').innerText = 'NAMA PELANGGAN';
                 document.getElementById('label-out-pengirim-rek').innerText = 'SUMBER DANA';
-                document.getElementById('label-out-tujuan-nama').innerText = 'ID PLN';
-                document.getElementById('label-out-tujuan-rek').innerText = 'TARIF/DAYA';
+                document.getElementById('label-out-tujuan-nama').innerText = 'ID PELANGGAN';
+                document.getElementById('label-out-tujuan-rek').innerText = 'JUMLAH DAYA';
                 document.getElementById('label-out-tujuan-bank').innerText = 'PRODUK';
 
             } else {
@@ -657,10 +657,19 @@
 
                     // Nama (Cari manual)
                     if (!pNama && (lLower.match(/^nama/) || lLower.includes('nama pel'))) {
-                        let n = line.replace(/^(nama\s*pelanggan|nama\s*pel|nama)[:\s\-]*/i, '').trim();
-                        if (!n && i+1 < lines.length) n = lines[i+1].trim();
-                        if (n) pNama = n;
+                         let n = line.replace(/^(nama\s*pelanggan|nama\s*pel|nama)[:\s\-]*/i, '').trim();
+                         if (!n && i + 1 < lines.length) n = lines[i + 1].trim();
+                         if (n) pNama = n;
                     }
+
+                     // Fallback PLN OCR
+                     if (!pNama) {
+                         const namaMatch = line.match(/\b([A-Z](?:\s+[A-Z]){2,})\s*$/);
+
+                         if (namaMatch) {
+                             pNama = namaMatch[1].replace(/\s+/g, '');
+                        }
+                     }
 
                     // Jumlah kWH / Daya
                     if (!pDaya && (lLower.includes('kwh') || lLower.includes('daya') || lLower.includes('tarif'))) {
@@ -670,8 +679,8 @@
                     }
 
                     // No Referensi
-                    if (!pRef && (lLower.includes('ref') || lLower.includes('trx') || lLower.includes('struk') || lLower.includes('order'))) {
-                        let m = line.match(/(?:ref|trx|referensi|struk|order)\s*[:\s]*([a-zA-Z0-9]+)/i);
+                    if (!pRef && (lLower.includes('ref') || lLower.includes('trx') || lLower.includes('grup') || lLower.includes('transaksi'))) {
+                        let m = line.match(/(?:ref|trx|referensi|grup|transaksi)\s*[:\s]*([a-zA-Z0-9]+)/i);
                         if (m) pRef = m[1];
                     }
 
@@ -709,7 +718,7 @@
                 else if (dataText.toLowerCase().includes('brimo')) document.getElementById('in-pengirim-rek').value = 'BRImo';
 
                 if (pId) document.getElementById('in-tujuan-nama').value = pId;     // ID PELANGGAN
-                if (pDaya) document.getElementById('in-tujuan-rek').value = pDaya;  // JUMLAH KWH
+                if (pDaya) document.getElementById('in-tujuan-rek').value = pDaya;  // JUMLAH DAYA
                 document.getElementById('in-tujuan-bank').value = 'Token PLN';      // PEMBAYARAN
                 if (pToken) document.getElementById('in-no-pelanggan').value = pToken; // NOMOR TOKEN
 
@@ -891,10 +900,18 @@
 
             if (jenisTransaksiAktif === 'listrik') {
                 // FORMAT CETAK STRUK KHUSUS PLN
-                t += padLabelValue('NAMA', get('in-pengirim-nama')) + "\n";
+                 let daya = detectDayaPLN(lines);
+
+                 if (daya) {
+                    daya = daya.replace(/kwh/i, '').trim();
+                    daya += ' KWH';
+                 } else {
+                      daya = get('in-tujuan-rek');
+                 }
+                t += padLabelValue('NAMA PELANGGAN', get('in-pengirim-nama')) + "\n";
                 t += padLabelValue('SUMBER DANA', get('in-pengirim-rek')) + "\n";
-                t += padLabelValue('ID PLN', get('in-tujuan-nama')) + "\n";
-                t += padLabelValue('TARIF/DAYA', get('in-tujuan-rek')) + "\n";
+                t += padLabelValue('ID PELANGGAN', get('in-tujuan-nama')) + "\n";
+                t += padLabelValue('JUMLAH DAYA', get('in-tujuan-rek')) + "\n";
                 t += padLabelValue('PRODUK', get('in-tujuan-bank')) + "\n";
                 
                 t += line + "\n";
