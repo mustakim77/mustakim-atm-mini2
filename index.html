@@ -289,16 +289,13 @@
                         <input type="text" id="in-ref" placeholder="161267832073">
                     </div>
 
-                    <!-- BLOK DATA PELANGGAN -->
                     <div style="border-left: 3px solid var(--primary); padding-left: 10px; margin-top: 10px;">
                         <div class="form-group"><label id="label-pengirim-nama">Nama Pengirim</label><input type="text" id="in-pengirim-nama"></div>
                         <div class="form-group" style="margin-top: 8px;"><label id="label-pengirim-rek">Rekening Pengirim</label><input type="text" id="in-pengirim-rek"></div>
                     </div>
 
-                    <!-- BLOK DATA TUJUAN -->
                     <div style="border-left: 3px solid #10b981; padding-left: 10px; margin-top: 10px;">
                         <div class="form-group"><label id="label-tujuan-nama">Nama Tujuan</label><input type="text" id="in-tujuan-nama"></div>
-                        
                         <div class="form-group" id="container-tujuan-rek" style="margin-top: 8px;"><label id="label-tujuan-rek">Rekening Tujuan</label><input type="text" id="in-tujuan-rek"></div>
                         <div class="form-group" id="container-tujuan-bank" style="margin-top: 8px;"><label id="label-tujuan-bank">Bank Tujuan</label><input type="text" id="in-tujuan-bank"></div>
                         
@@ -326,21 +323,24 @@
                             <p style="margin-top: 5px;">BUKTI TRANSFER</p>
                         </div>
                         <div class="receipt-line"></div>
-                        <div class="receipt-row"><span>Tanggal</span><span id="out-tanggal">--/--/---- --:--</span></div>
-                        <div class="receipt-row"><span>No. Referensi</span><span id="out-ref" style="text-align: right; word-break: break-all; max-width: 60%;">--</span></div>
                         
-                        <div class="receipt-line"></div>
-                        <div class="receipt-row" style="margin-bottom: 5px;"><span id="label-out-pengirim">PENGIRIM</span></div>
+                        <div class="receipt-row"><span>Tanggal</span><span id="out-tanggal">--/--/---- --:--</span></div>
+                        <div class="receipt-row"><span id="label-out-ref">No. Referensi</span><span id="out-ref" style="text-align: right; word-break: break-all; max-width: 60%;">--</span></div>
+                        <div class="receipt-line" id="line-pembatas-ref"></div>
+                        
+                        <!-- BLOCK PENGIRIM (Dihilangkan otomatis untuk PLN) -->
+                        <div class="receipt-row" style="margin-bottom: 5px;" id="row-label-pengirim"><span id="label-out-pengirim">PENGIRIM</span></div>
                         <div class="receipt-row"><span id="label-out-pengirim-nama">Nama</span><span id="out-pengirim-nama" style="text-align: right;">--</span></div>
                         <div class="receipt-row"><span id="label-out-pengirim-rek">Rekening</span><span id="out-pengirim-rek" style="text-align: right;">--</span></div>
-                        
                         <div class="receipt-line" id="line-tujuan"></div>
+                        
+                        <!-- BLOCK PENERIMA (Dihilangkan otomatis untuk PLN) -->
                         <div class="receipt-row" style="margin-bottom: 5px;" id="row-label-tujuan"><span id="label-out-tujuan">PENERIMA</span></div>
                         <div class="receipt-row"><span id="label-out-tujuan-nama">Nama</span><span id="out-tujuan-nama" style="text-align: right; max-width: 65%;">--</span></div>
-                        
                         <div class="receipt-row" id="row-out-tujuan-rek"><span id="label-out-tujuan-rek">Rekening</span><span id="out-tujuan-rek" style="text-align: right;">--</span></div>
                         <div class="receipt-row" id="row-out-tujuan-bank"><span id="label-out-tujuan-bank">Bank</span><span id="out-tujuan-bank" style="text-align: right;">--</span></div>
                         
+                        <!-- BLOCK TOKEN -->
                         <div id="block-out-no-pelanggan" style="display: none; text-align: center; margin: 10px 0; padding: 8px; background: #f8fafc; border-radius: 6px;">
                             <div style="font-size: 10px; color: #64748b; margin-bottom: 3px;">Nomor Token</div>
                             <div id="out-no-pelanggan" style="font-weight: 700; font-size: 15px; letter-spacing: 1.5px;">--</div>
@@ -349,6 +349,8 @@
                         <div class="receipt-line"></div>
                         <div class="receipt-row"><span>Nominal</span><span id="out-nominal">Rp 0</span></div>
                         <div class="receipt-row"><span>Biaya Admin</span><span id="out-admin">Rp 0</span></div>
+                        
+                        <!-- DI SINI HARUS TERTULIS TOTAL -->
                         <div class="receipt-row bold"><span>TOTAL</span><span id="out-total">Rp 0</span></div>
                         
                         <div class="receipt-line"></div>
@@ -358,6 +360,7 @@
                             <p style="margin-top:10px">==============================</p>
                         </div>
                     </div>
+                    
                     <div style="display: flex; gap: 10px; width: 100%; max-width: 280px; margin-top: 15px;">
                         <button class="btn btn-secondary" style="flex: 1;" onclick="simpanKeRiwayat()">
                             <i class="fa-solid fa-floppy-disk"></i> Simpan
@@ -410,72 +413,49 @@
             toast.textContent = message;
             toast.className = 'toast show' + (type === 'error' ? ' error' : type === 'success' ? ' success' : '');
             clearTimeout(toastTimer);
-            toastTimer = setTimeout(() => {
-                toast.classList.remove('show');
-            }, duration);
+            toastTimer = setTimeout(() => { toast.classList.remove('show'); }, duration);
         }
 
-        function showRawOcrButton() {
-            const btn = document.getElementById('btn-raw-ocr');
-            if (btn) btn.style.display = 'block';
-        }
-
-        function showRawOcrModal() {
-            document.getElementById('raw-ocr-text').value = window.__lastRawOcrText || '(belum ada data)';
-            document.getElementById('raw-ocr-modal').style.display = 'flex';
-        }
-
+        function showRawOcrButton() { const btn = document.getElementById('btn-raw-ocr'); if (btn) btn.style.display = 'block'; }
+        function showRawOcrModal() { document.getElementById('raw-ocr-text').value = window.__lastRawOcrText || '(belum ada data)'; document.getElementById('raw-ocr-modal').style.display = 'flex'; }
         function copyRawOcrText() {
             const textarea = document.getElementById('raw-ocr-text');
             textarea.select();
-            navigator.clipboard.writeText(textarea.value).then(() => {
-                showToast('Teks disalin ke clipboard.', 'success');
-            }).catch(() => {
-                showToast('Gagal menyalin otomatis, silakan salin manual.', 'error');
-            });
+            navigator.clipboard.writeText(textarea.value).then(() => { showToast('Teks disalin ke clipboard.', 'success'); }).catch(() => { showToast('Gagal menyalin otomatis, silakan salin manual.', 'error'); });
         }
 
         let jenisTransaksiAktif = 'transfer';
 
-        // KONFIGURASI KHUSUS YANG MENGUBAH TATA LETAK EDIT & STRUK SECARA OTOMATIS
+        // KONFIGURASI NAMA LABEL (SESUAI DENGAN YANG ANDA MINTA DI GAMBAR)
         const KONFIGURASI_JENIS = {
             transfer: {
-                labelUploadJudul: 'Upload Bukti Transfer',
-                labelUploadSub: 'Foto screenshot bukti transfer (BRImo, BCA, Mandiri, dll)',
+                labelUploadJudul: 'Upload Bukti Transfer', labelUploadSub: 'Foto screenshot bukti transfer (BRImo, BCA, Mandiri, dll)',
                 labelPengirim: 'PENGIRIM', labelPengirimNama: 'Nama Pengirim', labelPengirimRek: 'Rekening Pengirim',
                 labelTujuan: 'PENERIMA', labelTujuanNama: 'Nama Tujuan', labelTujuanRek: 'Rekening Tujuan', labelTujuanBank: 'Bank Tujuan',
-                showNoPelanggan: false,
-                judulStruk: 'BUKTI TRANSFER'
+                showNoPelanggan: false, judulStruk: 'BUKTI TRANSFER'
             },
             ewallet: {
-                labelUploadJudul: 'Upload Bukti Topup E-Wallet',
-                labelUploadSub: 'Foto screenshot bukti topup DANA, OVO, GoPay, ShopeePay, dll',
+                labelUploadJudul: 'Upload Bukti Topup E-Wallet', labelUploadSub: 'Foto screenshot bukti topup DANA, OVO, GoPay, ShopeePay, dll',
                 labelPengirim: 'SUMBER DANA', labelPengirimNama: 'Nama Pemilik Rekening', labelPengirimRek: 'Rekening Sumber',
                 labelTujuan: 'TOPUP E-WALLET', labelTujuanNama: 'Nama Pemilik Akun', labelTujuanRek: 'Nomor HP / ID Akun', labelTujuanBank: 'E-Wallet Tujuan',
-                showNoPelanggan: false,
-                judulStruk: 'BUKTI TOPUP E-WALLET'
+                showNoPelanggan: false, judulStruk: 'BUKTI TOPUP E-WALLET'
             },
             listrik: {
-                // Di sini label diubah total untuk membentuk antarmuka khusus PLN
-                labelUploadJudul: 'Upload Bukti Token PLN',
-                labelUploadSub: 'Foto screenshot bukti beli token (DANA, SPay, BRImo, OVO, dll)',
-                labelPengirim: 'DATA PELANGGAN', 
+                labelUploadJudul: 'Upload Bukti Token PLN', labelUploadSub: 'Foto screenshot bukti beli token (DANA, SPay, BRImo, OVO, dll)',
+                labelPengirim: 'PEMBAYAR', 
                 labelPengirimNama: 'Nama Pelanggan', 
-                labelPengirimRek: 'ID Pelanggan', // Dikhususkan 11 Digit
-                labelTujuan: 'DETAIL TRANSAKSI', 
-                labelTujuanNama: 'Tarif / Daya', 
-                labelTujuanRek: 'HIDDEN', // Otomatis sembunyi di form & struk
-                labelTujuanBank: 'HIDDEN', // Otomatis sembunyi di form & struk
-                showNoPelanggan: true,
-                judulStruk: 'BUKTI PEMBELIAN TOKEN LISTRIK'
+                labelPengirimRek: 'Rekening/Sumber Dana',
+                labelTujuan: 'PLN', 
+                labelTujuanNama: 'ID Pelanggan', 
+                labelTujuanRek: 'Jumlah kWH',
+                labelTujuanBank: 'Pembayaran',
+                showNoPelanggan: true, judulStruk: 'STRUK TOKEN LISTRIK'
             },
             tagihan: {
-                labelUploadJudul: 'Upload Bukti Bayar Tagihan',
-                labelUploadSub: 'Foto screenshot bukti bayar BPJS, kredit, pulsa, internet, dll',
+                labelUploadJudul: 'Upload Bukti Bayar Tagihan', labelUploadSub: 'Foto screenshot bukti bayar BPJS, kredit, pulsa, dll',
                 labelPengirim: 'PEMBAYAR', labelPengirimNama: 'Nama Pembayar', labelPengirimRek: 'Rekening/Sumber Dana',
                 labelTujuan: 'LAYANAN', labelTujuanNama: 'Nama Pelanggan', labelTujuanRek: 'Jenis Layanan', labelTujuanBank: 'Penyedia Layanan',
-                showNoPelanggan: true,
-                judulStruk: 'BUKTI PEMBAYARAN'
+                showNoPelanggan: true, judulStruk: 'BUKTI PEMBAYARAN'
             }
         };
 
@@ -487,45 +467,52 @@
             if (btnEl) btnEl.classList.add('active');
 
             // Set Label Upload
-            const placeholderJudul = document.querySelector('#upload-placeholder h2');
-            const placeholderSub = document.querySelector('#upload-placeholder p');
-            if (placeholderJudul) placeholderJudul.innerText = cfg.labelUploadJudul;
-            if (placeholderSub) placeholderSub.innerText = cfg.labelUploadSub;
+            document.querySelector('#upload-placeholder h2').innerText = cfg.labelUploadJudul;
+            document.querySelector('#upload-placeholder p').innerText = cfg.labelUploadSub;
 
             // Set Label Form Edit Data
             document.getElementById('label-pengirim-nama').innerText = cfg.labelPengirimNama;
             document.getElementById('label-pengirim-rek').innerText = cfg.labelPengirimRek;
             document.getElementById('label-tujuan-nama').innerText = cfg.labelTujuanNama;
-            
-            // Set Visibilitas Baris di Form Edit (Sembunyikan jika "HIDDEN" untuk PLN)
-            const isHiddenRek = cfg.labelTujuanRek === 'HIDDEN';
-            const isHiddenBank = cfg.labelTujuanBank === 'HIDDEN';
-            
-            document.getElementById('container-tujuan-rek').style.display = isHiddenRek ? 'none' : 'flex';
-            if (!isHiddenRek) document.getElementById('label-tujuan-rek').innerText = cfg.labelTujuanRek;
-            
-            document.getElementById('container-tujuan-bank').style.display = isHiddenBank ? 'none' : 'flex';
-            if (!isHiddenBank) document.getElementById('label-tujuan-bank').innerText = cfg.labelTujuanBank;
-
+            document.getElementById('label-tujuan-rek').innerText = cfg.labelTujuanRek;
+            document.getElementById('label-tujuan-bank').innerText = cfg.labelTujuanBank;
             document.getElementById('group-no-pelanggan').style.display = cfg.showNoPelanggan ? 'block' : 'none';
 
-            // Set Label pada Pratinjau Struk
-            document.getElementById('label-out-pengirim').innerText = cfg.labelPengirim;
-            document.getElementById('label-out-pengirim-nama').innerText = cfg.labelPengirimNama;
-            document.getElementById('label-out-pengirim-rek').innerText = cfg.labelPengirimRek;
-            
-            document.getElementById('label-out-tujuan').innerText = cfg.labelTujuan;
-            document.getElementById('label-out-tujuan-nama').innerText = cfg.labelTujuanNama;
-            
-            // Set Visibilitas Baris di Pratinjau Struk (Sembunyikan untuk PLN)
-            document.getElementById('row-out-tujuan-rek').style.display = isHiddenRek ? 'none' : 'flex';
-            if (!isHiddenRek) document.getElementById('label-out-tujuan-rek').innerText = cfg.labelTujuanRek;
-            
-            document.getElementById('row-out-tujuan-bank').style.display = isHiddenBank ? 'none' : 'flex';
-            if (!isHiddenBank) document.getElementById('label-out-tujuan-bank').innerText = cfg.labelTujuanBank;
-
+            // Set Pratinjau Struk
             document.querySelector('.receipt-center p').innerText = cfg.judulStruk;
             document.getElementById('block-out-no-pelanggan').style.display = cfg.showNoPelanggan ? 'block' : 'none';
+
+            if (jenis === 'listrik') {
+                // HILANGKAN Header "PENGIRIM" & "PENERIMA" Khusus untuk Layout PLN
+                document.getElementById('row-label-pengirim').style.display = 'none';
+                document.getElementById('row-label-tujuan').style.display = 'none';
+                document.getElementById('line-tujuan').style.display = 'none';
+                
+                document.getElementById('label-out-ref').innerText = 'ID TRX';
+
+                // Ganti Label Khusus Struk PLN agar seperti aslinya
+                document.getElementById('label-out-pengirim-nama').innerText = 'NAMA';
+                document.getElementById('label-out-pengirim-rek').innerText = 'SUMBER DANA';
+                document.getElementById('label-out-tujuan-nama').innerText = 'ID PLN';
+                document.getElementById('label-out-tujuan-rek').innerText = 'TARIF/DAYA';
+                document.getElementById('label-out-tujuan-bank').innerText = 'PRODUK';
+
+            } else {
+                // TAMPILKAN Header Normal untuk Bank & Ewallet
+                document.getElementById('row-label-pengirim').style.display = 'flex';
+                document.getElementById('label-out-pengirim').innerText = cfg.labelPengirim;
+                document.getElementById('row-label-tujuan').style.display = 'flex';
+                document.getElementById('label-out-tujuan').innerText = cfg.labelTujuan;
+                document.getElementById('line-tujuan').style.display = 'block';
+                
+                document.getElementById('label-out-ref').innerText = 'No. Referensi';
+
+                document.getElementById('label-out-pengirim-nama').innerText = 'Nama';
+                document.getElementById('label-out-pengirim-rek').innerText = 'Rekening';
+                document.getElementById('label-out-tujuan-nama').innerText = 'Nama';
+                document.getElementById('label-out-tujuan-rek').innerText = 'Rekening';
+                document.getElementById('label-out-tujuan-bank').innerText = 'Bank';
+            }
         }
 
         function switchTab(tabName, clickedEl) {
@@ -533,12 +520,7 @@
             tabs.forEach(t => t.classList.remove('active'));
 
             let target = clickedEl;
-            if (!target) {
-                target = Array.from(tabs).find(t =>
-                    (tabName === 'edit' && t.textContent.includes('Edit')) ||
-                    (tabName === 'preview' && t.textContent.includes('Pratinjau'))
-                );
-            }
+            if (!target) { target = Array.from(tabs).find(t => (tabName === 'edit' && t.textContent.includes('Edit')) || (tabName === 'preview' && t.textContent.includes('Pratinjau'))); }
             if (target) target.classList.add('active');
 
             if(tabName === 'edit') {
@@ -551,10 +533,7 @@
             }
         }
 
-        function formatRibuan(angka) {
-            let n = parseInt(String(angka).replace(/\D/g, '')) || 0;
-            return n.toLocaleString('id-ID');
-        }
+        function formatRibuan(angka) { return parseInt(String(angka).replace(/\D/g, ''))?.toLocaleString('id-ID') || '0'; }
 
         function syncPreviewData() {
             document.getElementById('out-tanggal').innerText = document.getElementById('in-tanggal').value || '-';
@@ -568,9 +547,7 @@
             document.getElementById('out-tujuan-bank').innerText = document.getElementById('in-tujuan-bank').value || '-';
 
             const noPelangganEl = document.getElementById('in-no-pelanggan');
-            if (noPelangganEl) {
-                document.getElementById('out-no-pelanggan').innerText = formatNoPelangganTampil(noPelangganEl.value);
-            }
+            if (noPelangganEl) document.getElementById('out-no-pelanggan').innerText = formatNoPelangganTampil(noPelangganEl.value);
 
             const nominal = document.getElementById('in-nominal').value || '0';
             const admin = document.getElementById('in-admin').value || '0';
@@ -578,16 +555,13 @@
             document.getElementById('out-nominal').innerText = 'Rp ' + formatRibuan(nominal);
             document.getElementById('out-admin').innerText = 'Rp ' + formatRibuan(admin);
             
-            // Perhitungan Total untuk Pelanggan (Nominal + Admin)
+            // PERHITUNGAN TOTAL (NOMINAL + ADMIN) UNTUK TAMPIL DI STRUK PELANGGAN
             let n = parseInt(String(nominal).replace(/\D/g, '')) || 0;
             let a = parseInt(String(admin).replace(/\D/g, '')) || 0;
-            let total = n + a;
-            document.getElementById('out-total').innerText = 'Rp ' + total.toLocaleString('id-ID');
+            document.getElementById('out-total').innerText = 'Rp ' + (n + a).toLocaleString('id-ID'); 
         }
 
-        document.querySelectorAll('.edit-form input').forEach(input => {
-            input.addEventListener('input', syncPreviewData);
-        });
+        document.querySelectorAll('.edit-form input').forEach(input => { input.addEventListener('input', syncPreviewData); });
 
         document.getElementById('kamera-input').addEventListener('change', handleImageUpload);
         document.getElementById('galeri-input').addEventListener('change', handleImageUpload);
@@ -595,17 +569,12 @@
         function handleImageUpload(e) {
             const file = e.target.files[0];
             if (!file) return;
-
             const reader = new FileReader();
             reader.onload = function(event) {
                 document.getElementById('image-preview').src = event.target.result;
                 document.getElementById('image-preview').style.display = 'block';
                 document.getElementById('upload-placeholder').style.display = 'none';
-                
                 processOCR(event.target.result);
-            };
-            reader.onerror = function() {
-                showToast('Gagal membaca file gambar.', 'error');
             };
             reader.readAsDataURL(file);
             e.target.value = '';
@@ -613,207 +582,137 @@
 
         function processOCR(imageSrc) {
             const loader = document.getElementById('loader');
-            const loaderTitle = document.getElementById('loader-title');
-            const loaderSub = document.getElementById('loader-sub');
-            const resultSection = document.getElementById('result-section');
-            
-            loaderTitle.innerText = 'Memproses Gambar...';
-            loaderSub.innerText = 'Membaca teks struk, mohon tunggu sebentar';
             loader.style.display = 'flex';
-            resultSection.style.display = 'none';
+            document.getElementById('result-section').style.display = 'none';
 
             function runOCR(srcToUse) {
-                Tesseract.recognize(
-                    srcToUse,
-                    'ind',
-                    {
-                        logger: m => console.log(m),
-                        tessedit_pageseg_mode: '6',
-                        tessedit_char_whitelist: '0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz.,:/*- '
-                    }
-                ).then(({ data: { text } }) => {
+                Tesseract.recognize(srcToUse, 'ind', { logger: m => console.log(m), tessedit_pageseg_mode: '6' })
+                .then(({ data: { text } }) => {
                     loader.style.display = 'none';
-                    resultSection.style.display = 'flex';
-
-                    console.log("Raw OCR Text:", text);
+                    document.getElementById('result-section').style.display = 'flex';
                     window.__lastRawOcrText = text;
                     showRawOcrButton();
-
-                    try {
-                        extractDataFromText(text);
-                        switchTab('edit');
-                        showToast('Struk terbaca. Cek & lengkapi data.', 'success');
-                    } catch (parseErr) {
-                        console.error('Parsing data gagal sebagian:', parseErr);
-                        switchTab('edit');
-                        showToast('Teks terbaca, tapi data perlu dilengkapi manual.', 'info', 4000);
-                    }
-
+                    try { extractDataFromText(text); switchTab('edit'); showToast('Struk terbaca!', 'success'); } 
+                    catch (err) { switchTab('edit'); showToast('Harap lengkapi data manual.', 'info', 4000); }
                 }).catch(err => {
-                    console.error(err);
                     loader.style.display = 'none';
-                    resultSection.style.display = 'flex';
-                    showToast('Gagal membaca otomatis. Silakan isi manual.', 'error', 4000);
+                    document.getElementById('result-section').style.display = 'flex';
+                    showToast('Gagal membaca otomatis.', 'error', 4000);
                 });
-            }
-
-            function computeOtsuThreshold(grayHistogram, totalPixels) {
-                let sum = 0;
-                for (let t = 0; t < 256; t++) sum += t * grayHistogram[t];
-                let sumB = 0, wB = 0, wF = 0, varMax = 0, threshold = 150;
-                for (let t = 0; t < 256; t++) {
-                    wB += grayHistogram[t];
-                    if (wB === 0) continue;
-                    wF = totalPixels - wB;
-                    if (wF === 0) break;
-                    sumB += t * grayHistogram[t];
-                    const mB = sumB / wB;
-                    const mF = (sum - sumB) / wF;
-                    const varBetween = wB * wF * (mB - mF) * (mB - mF);
-                    if (varBetween > varMax) { varMax = varBetween; threshold = t; }
-                }
-                return threshold;
             }
 
             const img = new Image();
             img.onload = function() {
                 try {
-                    const SCALE = 2; 
-                    const canvas = document.createElement('canvas');
-                    canvas.width = img.width * SCALE;
-                    canvas.height = img.height * SCALE;
-                    const ctx = canvas.getContext('2d');
-                    ctx.imageSmoothingEnabled = true;
-                    ctx.imageSmoothingQuality = 'high';
-                    ctx.drawImage(img, 0, 0, canvas.width, canvas.height);
-
-                    const imageData = ctx.getImageData(0, 0, canvas.width, canvas.height);
-                    const data = imageData.data;
-
-                    const grayValues = new Uint8ClampedArray(data.length / 4);
-                    const histogram = new Array(256).fill(0);
-                    for (let i = 0, p = 0; i < data.length; i += 4, p++) {
-                        const gray = Math.round(0.299 * data[i] + 0.587 * data[i+1] + 0.114 * data[i+2]);
-                        grayValues[p] = gray;
-                        histogram[gray]++;
-                    }
-
-                    const threshold = computeOtsuThreshold(histogram, grayValues.length);
-
-                    for (let i = 0, p = 0; i < data.length; i += 4, p++) {
-                        const color = grayValues[p] > threshold ? 255 : 0;
-                        data[i] = color;
-                        data[i+1] = color;
-                        data[i+2] = color;
-                    }
-                    ctx.putImageData(imageData, 0, 0);
-                    const processedSrc = canvas.toDataURL();
-                    runOCR(processedSrc);
-                } catch (err) {
-                    console.error('Preprocessing gagal, lanjut pakai gambar asli:', err);
-                    runOCR(imageSrc);
-                }
-            };
-            img.onerror = function() {
-                loader.style.display = 'none';
-                resultSection.style.display = 'flex';
-                showToast('Gambar tidak valid atau rusak.', 'error');
+                    const canvas = document.createElement('canvas'); canvas.width = img.width * 2; canvas.height = img.height * 2;
+                    const ctx = canvas.getContext('2d'); ctx.drawImage(img, 0, 0, canvas.width, canvas.height);
+                    runOCR(canvas.toDataURL());
+                } catch (err) { runOCR(imageSrc); }
             };
             img.src = imageSrc;
         }
 
         // =====================================================================
-        // LOGIKA OCR CERDAS (TERMASUK BLOK KHUSUS PLN YG SANGAT AKURAT)
+        // LOGIKA OCR CERDAS DENGAN PENANGANAN KHUSUS "DANA/OVO" FORMAT (PLN)
         // =====================================================================
         function extractDataFromText(text) {
             const lines = text.split('\n').map(l => l.trim()).filter(l => l.length > 0);
             let dataText = text.replace(/\n/g, ' '); 
 
-            // Kosongkan seluruh form sebelum diisi
-            document.getElementById('in-nominal').value = '';
-            document.getElementById('in-ref').value = '';
-            document.getElementById('in-tanggal').value = '';
-            document.getElementById('in-pengirim-nama').value = '';
-            document.getElementById('in-pengirim-rek').value = '';
-            document.getElementById('in-tujuan-nama').value = '';
-            document.getElementById('in-tujuan-rek').value = '';
-            document.getElementById('in-tujuan-bank').value = '';
-            const noPelangganElReset = document.getElementById('in-no-pelanggan');
-            if (noPelangganElReset) noPelangganElReset.value = '';
+            // Bersihkan form
+            ['in-nominal', 'in-ref', 'in-tanggal', 'in-pengirim-nama', 'in-pengirim-rek', 'in-tujuan-nama', 'in-tujuan-rek', 'in-tujuan-bank', 'in-no-pelanggan']
+            .forEach(id => { if (document.getElementById(id)) document.getElementById(id).value = ''; });
 
             // -----------------------------------------------------------------
-            // EKSEKUSI KHUSUS UNTUK STRUK TOKEN PLN
+            // KHUSUS STRUK TOKEN PLN
             // -----------------------------------------------------------------
             if (jenisTransaksiAktif === 'listrik') {
-                let pDate = "", pRef = "", pNama = "", pId = "", pDaya = "", pToken = "", pNominal = "";
+                let pDate = "", pRef = "", pNama = "", pId = "", pDaya = "", pToken = "", pNominal = "", pSumber = "";
 
-                // 1. Ekstrak Token 20 Digit 
+                // Ekstrak Token
                 let tokenMatch = dataText.match(/((?:\d{4}[\s\-]*){4}\d{4})/);
                 if (tokenMatch) pToken = tokenMatch[1].replace(/[\s\-]/g, '');
 
-                // 2. Ekstrak ID Pelanggan (Menangkap ketat 11 atau 12 Digit)
-                let idMatch = dataText.match(/(?:id\s*pel|idpel|id\s*pln|idpln|meter|pelanggan)[^\d]*(\d{11,12})\b/i);
-                if (idMatch) pId = idMatch[1];
-
-                // 3. Ekstrak Nominal Uang
-                let nomMatch = dataText.match(/(?:rp|total|bayar|nominal|stroom)[^\d]*(\d{2,3}[\.\,]\d{3}(?:[\.\,]\d{3})?)/i);
-                if(nomMatch) pNominal = nomMatch[1].replace(/[\.\,]/g, '');
-                if(!pNominal) {
-                    let fallbackNom = dataText.match(/Rp\s*([\d\.\,]+)/i);
-                    if(fallbackNom) pNominal = fallbackNom[1].replace(/[\.\,]/g, '');
+                // PENANGANAN KHUSUS DANA: Membaca teks tergabung spt "Token Listrik 100Rb 45036262876 H E R I"
+                let gabunganMatch = dataText.match(/(?:Token Listrik|PLN)[^\d]*\d+[a-zA-Z]*\s+(\d{11,12})\s+([A-Za-z\s]+)/i);
+                if (gabunganMatch) {
+                    pId = gabunganMatch[1];
+                    pNama = gabunganMatch[2].trim();
                 }
 
-                // 4. Proses Baris per Baris untuk Nama, Daya, Ref, Tanggal
+                // Cari per baris untuk fallback
                 for (let i = 0; i < lines.length; i++) {
                     let line = lines[i];
                     let lLower = line.toLowerCase();
 
-                    // Nama Pelanggan
-                    if (lLower.match(/^nama/) || lLower.includes('nama pel')) {
-                        let rawNama = line.replace(/^(nama\s*pelanggan|nama\s*pel|nama)[:\s\-]*/i, '').trim();
-                        if (!rawNama && i + 1 < lines.length) rawNama = lines[i+1].trim();
-                        if (rawNama) pNama = rawNama;
+                    // ID Pelanggan (Cari manual jika gagal digabung)
+                    if (!pId && (lLower.includes('id pel') || lLower.includes('idpel') || lLower.includes('id pln') || lLower.includes('meter') || lLower.includes('pelanggan'))) {
+                        let m = line.match(/(?:id\s*pel|idpel|id\s*pln|idpln|meter|pelanggan)[^\d]*(\d{11,12})\b/i);
+                        if (m) pId = m[1];
+                    }
+                    if (!pId) {
+                        let anyId = line.match(/(?<!\d)(\d{11,12})(?!\d)/); // Angka 11-12 digit acak
+                        if (anyId) pId = anyId[1];
                     }
 
-                    // Tarif / Daya
-                    if (lLower.includes('daya') || lLower.includes('tarif') || lLower.includes('kwh') || lLower.includes('gol')) {
-                        let rawDaya = line.replace(/^(tarif|daya|golongan|kwh)[\/\s]*((daya|tarif)?)(?:[:\s\-]*)/i, '').trim();
-                        if (!rawDaya && i + 1 < lines.length) rawDaya = lines[i+1].trim();
-                        if (rawDaya) pDaya = rawDaya;
+                    // Nama (Cari manual)
+                    if (!pNama && (lLower.match(/^nama/) || lLower.includes('nama pel'))) {
+                        let n = line.replace(/^(nama\s*pelanggan|nama\s*pel|nama)[:\s\-]*/i, '').trim();
+                        if (!n && i+1 < lines.length) n = lines[i+1].trim();
+                        if (n) pNama = n;
                     }
 
-                    // Nomor Referensi
-                    if (lLower.includes('ref') || lLower.includes('trx') || lLower.includes('struk')) {
-                        let match = line.match(/(?:ref|trx|referensi|struk)\s*[:\s]*([a-zA-Z0-9]+)/i);
-                        if (match) pRef = match[1];
+                    // Jumlah kWH / Daya
+                    if (!pDaya && (lLower.includes('kwh') || lLower.includes('daya') || lLower.includes('tarif'))) {
+                        let d = line.replace(/^(tarif|daya|golongan|jumlah|kwh)[\s\/\:]*((daya|tarif|kwh)?)(?:[:\s\-]*)/i, '').trim();
+                        if (!d && i+1 < lines.length) d = lines[i+1].trim();
+                        if (d) pDaya = d;
+                    }
+
+                    // No Referensi
+                    if (!pRef && (lLower.includes('ref') || lLower.includes('trx') || lLower.includes('struk') || lLower.includes('order'))) {
+                        let m = line.match(/(?:ref|trx|referensi|struk|order)\s*[:\s]*([a-zA-Z0-9]+)/i);
+                        if (m) pRef = m[1];
+                    }
+
+                    // Sumber Dana / Rekening Pembayar
+                    if (!pSumber && (lLower.includes('metode') || lLower.includes('pembayaran') || lLower.includes('bayar pakai'))) {
+                        let m = line.match(/(?:metode pembayaran|pembayaran|bayar pakai|sumber dana)\s*[:\s]*([a-zA-Z\s]+)/i);
+                        if (m) pSumber = m[1].trim();
                     }
 
                     // Tanggal
                     if (!pDate) {
-                        let dateMatch = line.match(/(\d{2}[\/\-]\d{2}[\/\-]\d{2,4}\s+\d{2}:\d{2}(?::\d{2})?)/) || 
-                                        line.match(/(\d{1,2}\s+[a-zA-Z]+\s+\d{4}\s+\d{2}:\d{2})/);
-                        if (dateMatch) pDate = dateMatch[1];
+                        let dm = line.match(/(\d{2}[\/\-]\d{2}[\/\-]\d{2,4}\s+\d{2}:\d{2}(?::\d{2})?)/) || line.match(/(\d{1,2}\s+[a-zA-Z]+\s+\d{4}\s+\d{2}:\d{2})/);
+                        if (dm) pDate = dm[1];
                     }
                 }
 
-                // --- PEMETAAN DATA KE FORM HTML PLN ---
-                if (pDate) {
-                    document.getElementById('in-tanggal').value = pDate;
-                } else {
-                    const wkt = new Date();
-                    document.getElementById('in-tanggal').value = wkt.toLocaleDateString('id-ID', { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric', hour: '2-digit', minute: '2-digit', second: '2-digit' }).replace(/\./g, ':') + ' WIB';
-                }
+                // Nominal
+                let nomMatch = dataText.match(/(?:rp|total|bayar|nominal|stroom)[^\d]*(\d{2,3}[\.\,]\d{3}(?:[\.\,]\d{3})?)/i) || dataText.match(/Rp\s*([\d\.\,]+)/i);
+                if (nomMatch) pNominal = nomMatch[1].replace(/[\.\,]/g, '');
 
+                // -- MAPPING DATA KE FORM UI (SESUAI GAMBAR ANDA) --
+                if (pDate) document.getElementById('in-tanggal').value = pDate;
+                else document.getElementById('in-tanggal').value = new Date().toLocaleDateString('id-ID', { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric', hour: '2-digit', minute: '2-digit', second: '2-digit' }).replace(/\./g, ':') + ' WIB';
+                
                 if (pRef) document.getElementById('in-ref').value = pRef;
                 if (pNominal) document.getElementById('in-nominal').value = pNominal;
+
+                if (pNama) document.getElementById('in-pengirim-nama').value = pNama; // NAMA PELANGGAN
                 
-                // Berdasarkan KONFIGURASI_JENIS.listrik, kita mapping ke ID input yang tepat:
-                if (pNama) document.getElementById('in-pengirim-nama').value = pNama; // Mapped sbg: Nama Pelanggan
-                if (pId) document.getElementById('in-pengirim-rek').value = pId;      // Mapped sbg: ID Pelanggan
-                if (pDaya) document.getElementById('in-tujuan-nama').value = pDaya;   // Mapped sbg: Tarif / Daya
-                if (pToken && noPelangganElReset) noPelangganElReset.value = pToken;  // Mapped sbg: Nomor Token
-                
-                // Segera hentikan skrip, jangan jalankan parsing transfer biasa
+                // MENEBAK REKENING/SUMBER DANA DARI TEKS STRUK JIKA TIDAK KETEMU
+                if (pSumber) document.getElementById('in-pengirim-rek').value = pSumber;
+                else if (dataText.toLowerCase().includes('dana')) document.getElementById('in-pengirim-rek').value = 'DANA';
+                else if (dataText.toLowerCase().includes('shopeepay')) document.getElementById('in-pengirim-rek').value = 'ShopeePay';
+                else if (dataText.toLowerCase().includes('ovo')) document.getElementById('in-pengirim-rek').value = 'OVO';
+                else if (dataText.toLowerCase().includes('brimo')) document.getElementById('in-pengirim-rek').value = 'BRImo';
+
+                if (pId) document.getElementById('in-tujuan-nama').value = pId;     // ID PELANGGAN
+                if (pDaya) document.getElementById('in-tujuan-rek').value = pDaya;  // JUMLAH KWH
+                document.getElementById('in-tujuan-bank').value = 'Token PLN';      // PEMBAYARAN
+                if (pToken) document.getElementById('in-no-pelanggan').value = pToken; // NOMOR TOKEN
+
                 syncPreviewData();
                 return;
             }
@@ -831,35 +730,26 @@
             if (dateMatch) {
                 document.getElementById('in-tanggal').value = dateMatch[1] + ', ' + dateMatch[2] + (dateMatch[3] ? ' ' + dateMatch[3].toUpperCase() : '');
             } else {
-                const wkt = new Date();
-                document.getElementById('in-tanggal').value = wkt.toLocaleDateString('id-ID', { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric', hour: '2-digit', minute: '2-digit', second: '2-digit' }).replace(/\./g, ':') + ' WIB';
+                document.getElementById('in-tanggal').value = new Date().toLocaleDateString('id-ID', { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric', hour: '2-digit', minute: '2-digit', second: '2-digit' }).replace(/\./g, ':') + ' WIB';
             }
 
             let section = 'none';
-            let pengirimData = [];
-            let tujuanData = [];
-
+            let pengirimData = [], tujuanData = [];
             const stripLabelPrefix = (line) => line.replace(/^(nama|rekening|akun(?:\s*dana)?|no\.?\s*rekening|nomor\s*hp|id\s*akun)[:\s]+/i, '').trim();
 
             for (let line of lines) {
                 let lLower = line.toLowerCase();
                 if (lLower.includes('sumber dana') || lLower === 'dari' || lLower.includes('pembayar') || lLower.includes('akun sumber')) { section = 'pengirim'; continue; }
                 if (lLower.includes('tujuan') || lLower === 'ke' || lLower.includes('detail pembayaran') || lLower.includes('detail tagihan') || lLower.includes('penerima')) { section = 'tujuan'; continue; }
-                if (lLower.includes('jenis transaksi') || lLower.includes('catatan') || lLower.includes('nominal') || lLower.includes('rincian') || lLower.includes('detail transaksi')) { section = 'none'; }
+                if (lLower.includes('jenis transaksi') || lLower.includes('catatan') || lLower.includes('nominal') || lLower.includes('rincian')) { section = 'none'; }
                 if (section === 'pengirim') pengirimData.push(stripLabelPrefix(line));
                 if (section === 'tujuan') tujuanData.push(stripLabelPrefix(line));
             }
 
             const noHpMatch = dataText.match(/\b(0|62)8[0-9]{8,11}\b/);
-            const cleanName = (name) => {
-                let parts = name.split(' ');
-                if (parts.length > 1 && parts[0].length <= 3 && parts[0] === parts[0].toUpperCase()) parts.shift();
-                return parts.join(' ').replace(/[^a-zA-Z\s\.]/g, '').trim();
-            };
-
+            const cleanName = (name) => { let p = name.split(' '); if (p.length > 1 && p[0].length <= 3 && p[0] === p[0].toUpperCase()) p.shift(); return p.join(' ').replace(/[^a-zA-Z\s\.]/g, '').trim(); };
             const isBankAccount = (str) => /[\d\*\.\s\-xX]{5,}/.test(str) && (str.match(/\d/g) || []).length >= 2;
-            const isBankName = (str) => /bank|bca|\bbri\b|beri|mandiri|bni|bsi|cimb|dana|ovo|gopay|gojek|shopeepay|linkaja|pln|pdam|telkomsel|indosat|\bxl\b|tri\b|smartfren|indihome|wifi|listrik|pulsa|internet/i.test(str);
-
+            const isBankName = (str) => /bank|bca|\bbri\b|beri|mandiri|bni|bsi|cimb|dana|ovo|gopay|gojek|shopeepay|linkaja/i.test(str);
             const cleanBankName = (str) => {
                 let s = str.toUpperCase();
                 if (s.includes('BERI') || s.includes('BRI')) return 'BANK BRI';
@@ -870,7 +760,6 @@
                 if (s.includes('OVO')) return 'OVO';
                 if (s.includes('GOPAY') || s.includes('GOJEK')) return 'GOPAY';
                 if (s.includes('SHOPEEPAY')) return 'SHOPEEPAY';
-                if (s.includes('LINKAJA')) return 'LINKAJA';
                 return str.trim();
             };
 
@@ -878,17 +767,8 @@
                 const firstDigit = str.search(/\d/);
                 const lastDigitFromEnd = [...str].reverse().join('').search(/\d/);
                 if (firstDigit === -1) return str.trim();
-                const lastDigit = str.length - 1 - lastDigitFromEnd;
-                let core = str.substring(firstDigit, lastDigit + 1);
-
+                let core = str.substring(firstDigit, str.length - lastDigitFromEnd);
                 if (/^[\d\*\s]+$/.test(core)) return core.trim().replace(/\s+/g, ' ');
-
-                const allDigits = core.match(/\d/g) || [];
-                if (allDigits.length >= 6) {
-                    const depan = allDigits.slice(0, 4).join('');
-                    const belakang = allDigits.slice(-3).join('');
-                    return `${depan} **** **** ${belakang}`;
-                }
                 return core.replace(/[A-Za-z\.\-]+/g, ' **** ').replace(/\s+/g, ' ').trim();
             };
 
@@ -898,12 +778,7 @@
                 else if (isBankName(item) && pBank === "") pBank = cleanBankName(item);
                 else if (item.length > 3 && pNama === "") pNama = cleanName(item);
             }
-            if (pRek === "") {
-                for (let item of pengirimData) {
-                    if (isBankName(item)) continue;
-                    if ((item.match(/\d/g) || []).length >= 2) { pRek = cleanRekeningOcr(item); break; }
-                }
-            }
+            if (pRek === "") { for (let item of pengirimData) { if (isBankName(item)) continue; if ((item.match(/\d/g) || []).length >= 2) { pRek = cleanRekeningOcr(item); break; } } }
 
             let tNama = "", tRek = "", tBank = "";
             for (let item of tujuanData) {
@@ -911,12 +786,7 @@
                 else if (isBankName(item) && tBank === "") tBank = cleanBankName(item);
                 else if (item.length > 3 && tNama === "") tNama = cleanName(item);
             }
-            if (tRek === "") {
-                for (let item of tujuanData) {
-                    if (isBankName(item)) continue;
-                    if ((item.match(/\d/g) || []).length >= 2) { tRek = cleanRekeningOcr(item); break; }
-                }
-            }
+            if (tRek === "") { for (let item of tujuanData) { if (isBankName(item)) continue; if ((item.match(/\d/g) || []).length >= 2) { tRek = cleanRekeningOcr(item); break; } } }
 
             if (pNama) document.getElementById('in-pengirim-nama').value = pNama;
             if (pRek) document.getElementById('in-pengirim-rek').value = pRek;
@@ -939,7 +809,7 @@
         }
 
         const PRINTER_PROFILES = [
-            { name: 'CC41 (MP-58A1 / Goojprt / Zjiang)', service: '49535343-fe7d-4ae5-8fa9-9fafd205e455', write: '49535343-8841-43f4-a8d4-ecbe34729bb3' },
+            { name: 'CC41', service: '49535343-fe7d-4ae5-8fa9-9fafd205e455', write: '49535343-8841-43f4-a8d4-ecbe34729bb3' },
             { name: 'Generic FF00', service: '0000ff00-0000-1000-8000-00805f9b34fb', write: '0000ff02-0000-1000-8000-00805f9b34fb' },
             { name: 'Generic 18F0', service: '000018f0-0000-1000-8000-00805f9b34fb', write: '00002af1-0000-1000-8000-00805f9b34fb' }
         ];
@@ -954,20 +824,10 @@
         }
 
         async function connectToPrinter() {
-            const device = await navigator.bluetooth.requestDevice({
-                acceptAllDevices: true,
-                optionalServices: PRINTER_PROFILES.map(p => p.service)
-            });
-
+            const device = await navigator.bluetooth.requestDevice({ acceptAllDevices: true, optionalServices: PRINTER_PROFILES.map(p => p.service) });
             showToast('Menghubungkan ke ' + (device.name || 'printer') + '...', 'info', 2000);
-
-            device.addEventListener('gattserverdisconnected', () => {
-                printerConn = { device: null, characteristic: null, profile: null };
-                setPrinterButtonState(false, 'Printer');
-            });
-
+            device.addEventListener('gattserverdisconnected', () => { printerConn = { device: null, characteristic: null, profile: null }; setPrinterButtonState(false, 'Printer'); });
             const server = await device.gatt.connect();
-            let lastError = null;
 
             for (const profile of PRINTER_PROFILES) {
                 try {
@@ -975,44 +835,23 @@
                     const characteristic = await service.getCharacteristic(profile.write);
                     printerConn = { device, characteristic, profile };
                     setPrinterButtonState(true, 'Terhubung');
-                    showToast('Printer terhubung: ' + (device.name || profile.name), 'success');
+                    showToast('Printer terhubung!', 'success');
                     return printerConn;
-                } catch (err) { lastError = err; continue; }
+                } catch (err) { continue; }
             }
-
-            try {
-                const services = await server.getPrimaryServices();
-                for (const service of services) {
-                    try {
-                        const characteristics = await service.getCharacteristics();
-                        const writable = characteristics.find(c => c.properties.write || c.properties.writeWithoutResponse);
-                        if (writable) {
-                            printerConn = { device, characteristic: writable, profile: { name: 'Auto-detect' } };
-                            setPrinterButtonState(true, 'Terhubung');
-                            showToast('Printer terhubung (mode deteksi otomatis)', 'success');
-                            return printerConn;
-                        }
-                    } catch (e) { continue; }
-                }
-            } catch (e) { lastError = e; }
-
-            throw lastError || new Error('Tidak ditemukan characteristic yang bisa ditulisi pada perangkat ini.');
+            throw new Error('Gagal menghubungkan ke perangkat cetak.');
         }
 
         async function writeInChunks(characteristic, bytes, chunkSize = 20, delayMs = 25) {
             for (let i = 0; i < bytes.length; i += chunkSize) {
                 const chunk = bytes.slice(i, i + chunkSize);
-                if (characteristic.properties && characteristic.properties.writeWithoutResponse) {
-                    await characteristic.writeValueWithoutResponse(chunk);
-                } else {
-                    await characteristic.writeValue(chunk);
-                }
+                if (characteristic.properties && characteristic.properties.writeWithoutResponse) { await characteristic.writeValueWithoutResponse(chunk); } 
+                else { await characteristic.writeValue(chunk); }
                 await new Promise(res => setTimeout(res, delayMs));
             }
         }
 
         const PAPER_WIDTH = 32;
-
         function padLabelValue(label, value, width = PAPER_WIDTH) {
             value = String(value || '-');
             const maxValueLen = width - label.length - 1;
@@ -1020,20 +859,14 @@
                 const spaces = width - label.length - value.length;
                 return label + ' '.repeat(Math.max(1, spaces)) + value;
             }
-            const lines = [];
-            lines.push(label);
+            const lines = []; lines.push(label);
             let remaining = value;
-            while (remaining.length > 0) {
-                const part = remaining.slice(0, width);
-                remaining = remaining.slice(width);
-                const spaces = Math.max(0, width - part.length);
-                lines.push(' '.repeat(spaces) + part);
-            }
+            while (remaining.length > 0) { const part = remaining.slice(0, width); remaining = remaining.slice(width); lines.push(' '.repeat(Math.max(0, width - part.length)) + part); }
             return lines.join('\n');
         }
 
         // =====================================================================
-        // MEMBANGUN STRUK CETAK THERMAL (MENYESUAIKAN PLN ATAU UMUM)
+        // MEMBANGUN STRUK CETAK THERMAL 
         // =====================================================================
         function buildReceiptEscPos() {
             const get = (id) => document.getElementById(id).value || '-';
@@ -1053,28 +886,24 @@
 
             t += "\x1B\x61\x00"; 
             t += padLabelValue('Tanggal', get('in-tanggal')) + "\n";
-            t += padLabelValue('No.Ref', get('in-ref')) + "\n";
+            t += padLabelValue('ID TRX', get('in-ref')) + "\n";
             t += line + "\n";
 
             if (jenisTransaksiAktif === 'listrik') {
                 // FORMAT CETAK STRUK KHUSUS PLN
-                t += "DATA PELANGGAN\n";
-                t += padLabelValue('ID Pel', get('in-pengirim-rek')) + "\n";
-                t += padLabelValue('Nama', get('in-pengirim-nama')) + "\n";
-                t += padLabelValue('Tarif/Daya', get('in-tujuan-nama')) + "\n";
+                t += padLabelValue('NAMA', get('in-pengirim-nama')) + "\n";
+                t += padLabelValue('SUMBER DANA', get('in-pengirim-rek')) + "\n";
+                t += padLabelValue('ID PLN', get('in-tujuan-nama')) + "\n";
+                t += padLabelValue('TARIF/DAYA', get('in-tujuan-rek')) + "\n";
+                t += padLabelValue('PRODUK', get('in-tujuan-bank')) + "\n";
                 
                 t += line + "\n";
                 const noPelangganFormatted = formatNoPelangganTampil(get('in-no-pelanggan'));
                 t += "\x1B\x61\x01"; 
                 t += "Nomor Token\n";
                 t += "\x1B\x45\x01"; 
-                if (noPelangganFormatted.length <= 16) {
-                    t += "\x1B\x21\x10"; 
-                    t += noPelangganFormatted + "\n";
-                    t += "\x1B\x21\x00"; 
-                } else {
-                    t += noPelangganFormatted + "\n";
-                }
+                if (noPelangganFormatted.length <= 16) { t += "\x1B\x21\x10"; t += noPelangganFormatted + "\n"; t += "\x1B\x21\x00"; } 
+                else { t += noPelangganFormatted + "\n"; }
                 t += "\x1B\x45\x00"; 
                 t += "\x1B\x61\x00"; 
                 t += line + "\n";
@@ -1093,16 +922,10 @@
 
                 if (cfg.showNoPelanggan) {
                     const noPelangganFormatted = formatNoPelangganTampil(get('in-no-pelanggan'));
-                    t += "\x1B\x61\x01"; 
-                    t += "Nomor Token\n";
-                    t += "\x1B\x45\x01"; 
-                    if (noPelangganFormatted.length <= 16) {
-                        t += "\x1B\x21\x10"; t += noPelangganFormatted + "\n"; t += "\x1B\x21\x00"; 
-                    } else {
-                        t += noPelangganFormatted + "\n";
-                    }
-                    t += "\x1B\x45\x00"; 
-                    t += "\x1B\x61\x00"; 
+                    t += "\x1B\x61\x01"; t += "Nomor Token\n"; t += "\x1B\x45\x01"; 
+                    if (noPelangganFormatted.length <= 16) { t += "\x1B\x21\x10"; t += noPelangganFormatted + "\n"; t += "\x1B\x21\x00"; } 
+                    else { t += noPelangganFormatted + "\n"; }
+                    t += "\x1B\x45\x00"; t += "\x1B\x61\x00"; 
                 }
                 t += line + "\n";
             }
@@ -1110,7 +933,7 @@
             t += padLabelValue('Nominal', 'Rp ' + nominal) + "\n";
             t += padLabelValue('Admin', 'Rp ' + admin) + "\n";
             t += "\x1B\x45\x01"; 
-            t += padLabelValue('TOTAL', 'Rp ' + total) + "\n"; 
+            t += padLabelValue('TOTAL', 'Rp ' + total) + "\n";  // Tampil TOTAL
             t += "\x1B\x45\x00"; 
             t += line + "\n";
 
@@ -1125,46 +948,32 @@
 
         function validateBeforePrint() {
             const nominal = document.getElementById('in-nominal').value;
-            if (!nominal || parseInt(nominal.replace(/\D/g, '')) <= 0) {
-                showToast('Nominal belum diisi. Lengkapi dulu sebelum mencetak.', 'error', 3500);
-                return false;
-            }
+            if (!nominal || parseInt(nominal.replace(/\D/g, '')) <= 0) { showToast('Nominal belum diisi.', 'error', 3500); return false; }
             return true;
         }
 
         async function printReceiptBluetooth() {
-            if (!navigator.bluetooth) {
-                showToast('Browser ini tidak mendukung Web Bluetooth.', 'error', 4000);
-                return;
-            }
+            if (!navigator.bluetooth) { showToast('Browser ini tidak mendukung Web Bluetooth.', 'error', 4000); return; }
             if (!validateBeforePrint()) return;
 
             const btn = document.getElementById('btn-printer');
             btn.disabled = true;
 
             try {
-                if (!printerConn.characteristic || !printerConn.device || !printerConn.device.gatt.connected) {
-                    await connectToPrinter();
-                }
-
+                if (!printerConn.characteristic || !printerConn.device || !printerConn.device.gatt.connected) { await connectToPrinter(); }
                 showToast('Mengirim struk ke printer...', 'info', 2000);
                 const receiptText = buildReceiptEscPos();
                 const encoder = new TextEncoder();
                 const bytes = encoder.encode(receiptText);
-
                 await writeInChunks(printerConn.characteristic, bytes);
                 showToast('Struk berhasil dicetak!', 'success');
             } catch (error) {
                 console.error(error);
                 let msg = 'Gagal mencetak. Pastikan Bluetooth aktif & printer menyala.';
                 if (error && error.name === 'NotFoundError') msg = 'Tidak ada printer dipilih.';
-                else if (error && error.message) msg = 'Gagal: ' + error.message;
-                
                 showToast(msg, 'error', 4000);
                 setPrinterButtonState(false, 'Printer');
-            } finally {
-                btn.disabled = false;
-            }
+            } finally { btn.disabled = false; }
         }
 
         function switchPage(page) {
@@ -1174,15 +983,11 @@
             const navRiwayat = document.getElementById('nav-riwayat');
 
             if (page === 'scan') {
-                pageScan.classList.remove('hidden');
-                pageRiwayat.classList.add('hidden');
-                navPindai.classList.add('active');
-                navRiwayat.classList.remove('active');
+                pageScan.classList.remove('hidden'); pageRiwayat.classList.add('hidden');
+                navPindai.classList.add('active'); navRiwayat.classList.remove('active');
             } else {
-                pageScan.classList.add('hidden');
-                pageRiwayat.classList.remove('hidden');
-                navPindai.classList.remove('active');
-                navRiwayat.classList.add('active');
+                pageScan.classList.add('hidden'); pageRiwayat.classList.remove('hidden');
+                navPindai.classList.remove('active'); navRiwayat.classList.add('active');
                 loadRiwayat();
             }
         }
@@ -1212,58 +1017,14 @@
                 const res = await fetch(API_URL, { method: 'POST', headers: { 'Content-Type': 'text/plain;charset=utf-8' }, body: JSON.stringify(payload) });
                 const result = await res.json();
                 if (result.status === 'success') showToast('Transaksi tersimpan ke riwayat.', 'success');
-                else showToast('Gagal menyimpan: ' + (result.message || 'unknown error'), 'error', 4000);
-            } catch (error) {
-                console.error(error);
-                showToast('Gagal terhubung ke server riwayat.', 'error', 4000);
-            }
+                else showToast('Gagal menyimpan.', 'error', 4000);
+            } catch (error) { showToast('Gagal terhubung ke server riwayat.', 'error', 4000); }
         }
 
         function formatNoPelangganTampil(raw) {
             const clean = String(raw || '').replace(/\s|-/g, '');
             if (!clean) return '-';
             return clean.match(/.{1,4}/g)?.join('-') || clean;
-        }
-
-        function buildReceiptPlainText() {
-            const get = (id) => document.getElementById(id).value || '-';
-            const nominal = formatRibuan(document.getElementById('in-nominal').value || '0');
-            const admin = formatRibuan(document.getElementById('in-admin').value || '0');
-            const total = document.getElementById('out-total').innerText.replace('Rp', '').trim();
-            const cfg = KONFIGURASI_JENIS[jenisTransaksiAktif] || KONFIGURASI_JENIS.transfer;
-            const line = '-'.repeat(28);
-
-            let msg = `*MUSTAKIM MINI ATM*\n${cfg.judulStruk}\n${line}\n`;
-            msg += `Tanggal: ${get('in-tanggal')}\n`;
-            msg += `No. Ref: ${get('in-ref')}\n${line}\n`;
-
-            if (jenisTransaksiAktif === 'listrik') {
-                // FORMAT TEKS WA KHUSUS PLN
-                msg += `*DATA PELANGGAN*\n`;
-                msg += `ID Pel: ${get('in-pengirim-rek')}\n`;
-                msg += `Nama: ${get('in-pengirim-nama')}\n`;
-                msg += `Tarif/Daya: ${get('in-tujuan-nama')}\n${line}\n`;
-                msg += `Nomor Token: *${formatNoPelangganTampil(get('in-no-pelanggan'))}*\n`;
-                msg += `${line}\n`;
-            } else {
-                // FORMAT TEKS WA UMUM
-                msg += `*${cfg.labelPengirim}*\n`;
-                msg += `Nama: ${get('in-pengirim-nama')}\n`;
-                msg += `Rek: ${get('in-pengirim-rek')}\n${line}\n`;
-                msg += `*${cfg.labelTujuan}*\n`;
-                msg += `Nama: ${get('in-tujuan-nama')}\n`;
-                msg += `Rek: ${get('in-tujuan-rek')}\n`;
-                msg += `Bank: ${get('in-tujuan-bank')}\n`;
-                if (cfg.showNoPelanggan) msg += `Nomor Token: *${formatNoPelangganTampil(get('in-no-pelanggan'))}*\n`;
-                msg += `${line}\n`;
-            }
-
-            msg += `Nominal: Rp ${nominal}\n`;
-            msg += `Admin: Rp ${admin}\n`;
-            msg += `*TOTAL: Rp ${total}*\n${line}\n`; 
-            msg += `Transaksi berhasil. Terima kasih telah menggunakan layanan kami.`;
-
-            return msg;
         }
 
         async function renderReceiptAsImage() {
@@ -1273,51 +1034,27 @@
             const previewWasHidden = tabPreview.style.display !== 'flex';
             const editWasVisible = tabEdit.style.display !== 'none';
 
-            if (previewWasHidden) {
-                tabPreview.style.display = 'flex';
-                tabEdit.style.display = 'none';
-            }
-
+            if (previewWasHidden) { tabPreview.style.display = 'flex'; tabEdit.style.display = 'none'; }
             syncPreviewData();
             await new Promise(resolve => setTimeout(resolve, 50));
 
             let canvas;
-            try {
-                canvas = await html2canvas(receiptEl, { backgroundColor: '#ffffff', scale: 2, useCORS: true, logging: false });
-            } finally {
-                if (previewWasHidden) {
-                    tabPreview.style.display = 'none';
-                    tabEdit.style.display = editWasVisible ? 'flex' : 'none';
-                }
-            }
+            try { canvas = await html2canvas(receiptEl, { backgroundColor: '#ffffff', scale: 2, useCORS: true, logging: false }); } 
+            finally { if (previewWasHidden) { tabPreview.style.display = 'none'; tabEdit.style.display = editWasVisible ? 'flex' : 'none'; } }
 
-            return new Promise((resolve, reject) => {
-                canvas.toBlob((blob) => {
-                    if (blob) resolve(blob);
-                    else reject(new Error('Gagal membuat gambar dari struk'));
-                }, 'image/png');
-            });
+            return new Promise((resolve, reject) => { canvas.toBlob((blob) => { if (blob) resolve(blob); else reject(new Error('Gagal')); }, 'image/png'); });
         }
 
         function downloadBlob(blob, filename) {
             const url = URL.createObjectURL(blob);
-            const a = document.createElement('a');
-            a.href = url;
-            a.download = filename;
-            document.body.appendChild(a);
-            a.click();
-            document.body.removeChild(a);
-            setTimeout(() => URL.revokeObjectURL(url), 1000);
+            const a = document.createElement('a'); a.href = url; a.download = filename;
+            document.body.appendChild(a); a.click(); document.body.removeChild(a); setTimeout(() => URL.revokeObjectURL(url), 1000);
         }
 
         async function shareKeWhatsApp(btnEl) {
             if (!validateBeforePrint()) return; 
-
             const originalHtml = btnEl ? btnEl.innerHTML : null;
-            if (btnEl) {
-                btnEl.disabled = true;
-                btnEl.innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i> Membuat gambar...';
-            }
+            if (btnEl) { btnEl.disabled = true; btnEl.innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i> Proses...'; }
 
             try {
                 const blob = await renderReceiptAsImage();
@@ -1325,25 +1062,13 @@
                 const file = new File([blob], filename, { type: 'image/png' });
 
                 if (navigator.share && navigator.canShare && navigator.canShare({ files: [file] })) {
-                    await navigator.share({
-                        files: [file],
-                        title: 'Struk Mustakim Mini ATM',
-                        text: 'Bukti transaksi dari Mustakim Mini ATM'
-                    });
+                    await navigator.share({ files: [file], title: 'Struk Mustakim Mini ATM', text: 'Bukti transaksi' });
                     showToast('Struk siap dibagikan.', 'success');
                 } else {
-                    downloadBlob(blob, filename);
-                    showToast('Gambar struk diunduh. Silakan kirim manual via WhatsApp.', 'info', 4500);
+                    downloadBlob(blob, filename); showToast('Gambar diunduh. Silakan kirim manual via WA.', 'info', 4500);
                 }
-            } catch (error) {
-                console.error(error);
-                if (error.name !== 'AbortError') showToast('Gagal membuat gambar struk untuk dibagikan.', 'error', 4000);
-            } finally {
-                if (btnEl && originalHtml) {
-                    btnEl.disabled = false;
-                    btnEl.innerHTML = originalHtml;
-                }
-            }
+            } catch (error) { if (error.name !== 'AbortError') showToast('Gagal membuat gambar struk.', 'error', 4000); } 
+            finally { if (btnEl && originalHtml) { btnEl.disabled = false; btnEl.innerHTML = originalHtml; } }
         }
 
         async function loadRiwayat() {
@@ -1351,31 +1076,23 @@
             const emptyEl = document.getElementById('riwayat-empty');
             const listEl = document.getElementById('riwayat-list');
 
-            listEl.innerHTML = '';
-            emptyEl.style.display = 'none';
-            loadingEl.style.display = 'block';
+            listEl.innerHTML = ''; emptyEl.style.display = 'none'; loadingEl.style.display = 'block';
 
-            if (!isApiConfigured()) {
-                loadingEl.style.display = 'none';
-                emptyEl.style.display = 'block';
-                emptyEl.querySelector('p').innerText = 'API belum dikonfigurasi (set API_URL di kode).';
-                return;
-            }
+            if (!isApiConfigured()) { loadingEl.style.display = 'none'; emptyEl.style.display = 'block'; emptyEl.querySelector('p').innerText = 'API belum dikonfigurasi.'; return; }
 
             try {
                 const res = await fetch(API_URL + '?action=riwayat');
                 const result = await res.json();
                 loadingEl.style.display = 'none';
 
-                if (result.status !== 'success' || !result.data || result.data.length === 0) {
-                    emptyEl.style.display = 'block';
-                    return;
-                }
+                if (result.status !== 'success' || !result.data || result.data.length === 0) { emptyEl.style.display = 'block'; return; }
 
                 result.data.forEach(trx => {
                     const card = document.createElement('div');
                     card.className = 'riwayat-card';
                     const jenisLabel = (KONFIGURASI_JENIS[trx.jenis] || KONFIGURASI_JENIS.transfer).judulStruk;
+                    
+                    // DI HALAMAN RIWAYAT TETAP MUNCUL UNTUNG
                     card.innerHTML = `
                         <div class="riwayat-card-top">
                             <div>
@@ -1392,12 +1109,7 @@
                     `;
                     listEl.appendChild(card);
                 });
-            } catch (error) {
-                console.error(error);
-                loadingEl.style.display = 'none';
-                emptyEl.style.display = 'block';
-                emptyEl.querySelector('p').innerText = 'Gagal memuat riwayat. Cek koneksi internet.';
-            }
+            } catch (error) { loadingEl.style.display = 'none'; emptyEl.style.display = 'block'; emptyEl.querySelector('p').innerText = 'Gagal memuat riwayat.'; }
         }
     </script>
 </body>
