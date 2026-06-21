@@ -491,7 +491,7 @@
                 document.getElementById('label-out-ref').innerText = 'ID TRX';
 
                 // Ganti Label Khusus Struk PLN agar seperti aslinya
-                document.getElementById('label-out-pengirim-nama').innerText = 'NAMA PELANGGAN';
+                document.getElementById('label-out-pengirim-nama').innerText = 'NAMA';
                 document.getElementById('label-out-pengirim-rek').innerText = 'SUMBER DANA';
                 document.getElementById('label-out-tujuan-nama').innerText = 'ID PELANGGAN';
                 document.getElementById('label-out-tujuan-rek').innerText = 'JUMLAH DAYA';
@@ -623,108 +623,183 @@
             ['in-nominal', 'in-ref', 'in-tanggal', 'in-pengirim-nama', 'in-pengirim-rek', 'in-tujuan-nama', 'in-tujuan-rek', 'in-tujuan-bank', 'in-no-pelanggan']
             .forEach(id => { if (document.getElementById(id)) document.getElementById(id).value = ''; });
 
-            // -----------------------------------------------------------------
+            // ----------------------------------------------------------------- 
             // KHUSUS STRUK TOKEN PLN
             // -----------------------------------------------------------------
-            if (jenisTransaksiAktif === 'listrik') {
-                let pDate = "", pRef = "", pNama = "", pId = "", pDaya = "", pToken = "", pNominal = "", pSumber = "";
+           if (jenisTransaksiAktif === 'listrik') {
+    let pDate = "", pRef = "", pNama = "", pId = "", pDaya = "", pToken = "", pNominal = "", pSumber = "";
 
-                // Ekstrak Token
-                let tokenMatch = dataText.match(/((?:\d{4}[\s\-]*){4}\d{4})/);
-                if (tokenMatch) pToken = tokenMatch[1].replace(/[\s\-]/g, '');
+    // ===============================
+    // TOKEN PLN
+    // ===============================
+    let tokenMatch = dataText.match(/((?:\d{4}[\s\-]*){4}\d{4})/);
+    if (tokenMatch) pToken = tokenMatch[1].replace(/[\s\-]/g, '');
 
-                // PENANGANAN KHUSUS DANA: Membaca teks tergabung spt "Token Listrik 100Rb 45036262876 H E R I"
-                let gabunganMatch = dataText.match(/(?:Token Listrik|PLN)[^\d]*\d+[a-zA-Z]*\s+(\d{11,12})\s+([A-Za-z\s]+)/i);
-                if (gabunganMatch) {
-                    pId = gabunganMatch[1];
-                    pNama = gabunganMatch[2].trim();
-                }
+    // ===============================
+    // DANA / BRIMO / SHOPEEPAY (gabungan)
+    // ===============================
+    let gabunganMatch = dataText.match(/(?:Token Listrik|PLN)[^\d]*\d+[a-zA-Z]*\s+(\d{11,12})\s+([A-Za-z\s]+)/i);
+    if (gabunganMatch) {
+        pId = gabunganMatch[1];
+        pNama = gabunganMatch[2].trim().replace(/\s+/g, '');
+    }
 
-                // Cari per baris untuk fallback
-                for (let i = 0; i < lines.length; i++) {
-                    let line = lines[i];
-                    let lLower = line.toLowerCase();
+    // ===============================
+    // LOOP BARIS OCR
+    // ===============================
+    for (let i = 0; i < lines.length; i++) {
+        let line = lines[i];
+        let lLower = line.toLowerCase();
 
-                    // ID Pelanggan (Cari manual jika gagal digabung)
-                    if (!pId && (lLower.includes('id pel') || lLower.includes('idpel') || lLower.includes('id pln') || lLower.includes('meter') || lLower.includes('pelanggan'))) {
-                        let m = line.match(/(?:id\s*pel|idpel|id\s*pln|idpln|meter|pelanggan)[^\d]*(\d{11,12})\b/i);
-                        if (m) pId = m[1];
-                    }
-                    if (!pId) {
-                        let anyId = line.match(/(?<!\d)(\d{11,12})(?!\d)/); // Angka 11-12 digit acak
-                        if (anyId) pId = anyId[1];
-                    }
+        // ===========================
+        // ID PELANGGAN PLN
+        // ===========================
+        if (!pId && (lLower.includes('id pel') || lLower.includes('idpel') || lLower.includes('meter') || lLower.includes('pelanggan'))) {
+            let m = line.match(/(\d{11,12})/);
+            if (m) pId = m[1];
+        }
 
-                    // Nama (Cari manual)
-                    if (!pNama && (lLower.match(/^nama/) || lLower.includes('nama pel'))) {
-                         let n = line.replace(/^(nama\s*pelanggan|nama\s*pel|nama)[:\s\-]*/i, '').trim();
-                         if (!n && i + 1 < lines.length) n = lines[i + 1].trim();
-                         if (n) pNama = n;
-                    }
+        if (!pId) {
+            let anyId = line.match(/(?<!\d)(\d{11,12})(?!\d)/);
+            if (anyId) pId = anyId[1];
+        }
 
-                     // Fallback PLN OCR
-                     if (!pNama) {
-                         const namaMatch = line.match(/\b([A-Z](?:\s+[A-Z]){2,})\s*$/);
+        // ===========================
+        // NAMA PELANGGAN (FIX UTAMA)
+        // ===========================
+        if (!pNama) {
 
-                         if (namaMatch) {
-                             pNama = namaMatch[1].replace(/\s+/g, '');
-                        }
-                     }
-
-                    // Jumlah kWH / Daya
-                    if (!pDaya && (lLower.includes('kwh') || lLower.includes('daya') || lLower.includes('tarif'))) {
-                        let d = line.replace(/^(tarif|daya|golongan|jumlah|kwh)[\s\/\:]*((daya|tarif|kwh)?)(?:[:\s\-]*)/i, '').trim();
-                        if (!d && i+1 < lines.length) d = lines[i+1].trim();
-                        if (d) pDaya = d;
-                    }
-
-                    // No Referensi
-                    if (!pRef && (lLower.includes('ref') || lLower.includes('trx') || lLower.includes('grup') || lLower.includes('transaksi'))) {
-                        let m = line.match(/(?:ref|trx|referensi|grup|transaksi)\s*[:\s]*([a-zA-Z0-9]+)/i);
-                        if (m) pRef = m[1];
-                    }
-
-                    // Sumber Dana / Rekening Pembayar
-                    if (!pSumber && (lLower.includes('metode') || lLower.includes('pembayaran') || lLower.includes('bayar pakai'))) {
-                        let m = line.match(/(?:metode pembayaran|pembayaran|bayar pakai|sumber dana)\s*[:\s]*([a-zA-Z\s]+)/i);
-                        if (m) pSumber = m[1].trim();
-                    }
-
-                    // Tanggal
-                    if (!pDate) {
-                        let dm = line.match(/(\d{2}[\/\-]\d{2}[\/\-]\d{2,4}\s+\d{2}:\d{2}(?::\d{2})?)/) || line.match(/(\d{1,2}\s+[a-zA-Z]+\s+\d{4}\s+\d{2}:\d{2})/);
-                        if (dm) pDate = dm[1];
-                    }
-                }
-
-                // Nominal
-                let nomMatch = dataText.match(/(?:rp|total|bayar|nominal|stroom)[^\d]*(\d{2,3}[\.\,]\d{3}(?:[\.\,]\d{3})?)/i) || dataText.match(/Rp\s*([\d\.\,]+)/i);
-                if (nomMatch) pNominal = nomMatch[1].replace(/[\.\,]/g, '');
-
-                // -- MAPPING DATA KE FORM UI (SESUAI GAMBAR ANDA) --
-                if (pDate) document.getElementById('in-tanggal').value = pDate;
-                else document.getElementById('in-tanggal').value = new Date().toLocaleDateString('id-ID', { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric', hour: '2-digit', minute: '2-digit', second: '2-digit' }).replace(/\./g, ':') + ' WIB';
-                
-                if (pRef) document.getElementById('in-ref').value = pRef;
-                if (pNominal) document.getElementById('in-nominal').value = pNominal;
-
-                if (pNama) document.getElementById('in-pengirim-nama').value = pNama; // NAMA PELANGGAN
-                
-                // MENEBAK REKENING/SUMBER DANA DARI TEKS STRUK JIKA TIDAK KETEMU
-                if (pSumber) document.getElementById('in-pengirim-rek').value = pSumber;
-                else if (dataText.toLowerCase().includes('dana')) document.getElementById('in-pengirim-rek').value = 'DANA';
-                else if (dataText.toLowerCase().includes('shopeepay')) document.getElementById('in-pengirim-rek').value = 'ShopeePay';
-                else if (dataText.toLowerCase().includes('ovo')) document.getElementById('in-pengirim-rek').value = 'OVO';
-                else if (dataText.toLowerCase().includes('brimo')) document.getElementById('in-pengirim-rek').value = 'BRImo';
-
-                if (pId) document.getElementById('in-tujuan-nama').value = pId;     // ID PELANGGAN
-                if (pDaya) document.getElementById('in-tujuan-rek').value = pDaya;  // JUMLAH DAYA
-                document.getElementById('in-tujuan-bank').value = 'Token PLN';      // PEMBAYARAN
-                if (pToken) document.getElementById('in-no-pelanggan').value = pToken; // NOMOR TOKEN
-
-                syncPreviewData();
-                return;
+            // HERI / H E R I / A B C
+            let spaced = line.match(/\b(?:[A-Z]\s){2,}[A-Z]\b/);
+            if (spaced) {
+                pNama = spaced[0].replace(/\s+/g, '');
             }
+
+            // Nama setelah ID
+            if (!pNama) {
+                let m = line.match(/\b\d{11,12}\s+([A-Za-z\s]{3,})/);
+                if (m) pNama = m[1].replace(/\s+/g, '');
+            }
+
+            // fallback keyword nama
+            if (!pNama && (lLower.includes('nama'))) {
+                let n = line.replace(/^(nama\s*pelanggan|nama\s*pel|nama)[:\s\-]*/i, '').trim();
+                if (!n && i + 1 < lines.length) n = lines[i + 1].trim();
+                if (n) pNama = n.replace(/\s+/g, '');
+            }
+        }
+
+        // ===========================
+        // DAYA / KWH (ANTI SALAH AMBIL)
+        // ===========================
+        if (!pDaya) {
+
+            if (/kwh|daya|tarif/i.test(lLower)) {
+                let m = line.match(/(\d{2,5}([.,]\d{1,2})?)/);
+                if (m) pDaya = m[1];
+            }
+
+            if (!pDaya) {
+                let m2 = line.match(/\b\d{2,5}([.,]\d{1,2})?\b/);
+                if (m2) {
+                    let val = parseFloat(m2[0].replace(',', '.'));
+                    if (val >= 10 && val <= 10000) {
+                        pDaya = m2[0];
+                    }
+                }
+            }
+
+            if (!pDaya && i + 1 < lines.length) {
+                let next = lines[i + 1].trim();
+                if (/^\d{2,5}([.,]\d{1,2})?$/.test(next)) {
+                    let val = parseFloat(next.replace(',', '.'));
+                    if (val >= 10 && val <= 10000) {
+                        pDaya = next;
+                    }
+                }
+            }
+        }
+
+        // ===========================
+        // REF / TRANSAKSI
+        // ===========================
+        if (!pRef && (lLower.includes('ref') || lLower.includes('trx') || lLower.includes('transaksi'))) {
+            let m = line.match(/(?:ref|trx|referensi|transaksi)\s*[:\s]*([a-zA-Z0-9]+)/i);
+            if (m) pRef = m[1];
+        }
+
+        // ===========================
+        // SUMBER DANA
+        // ===========================
+        if (!pSumber && (lLower.includes('metode') || lLower.includes('pembayaran') || lLower.includes('bayar pakai'))) {
+            let m = line.match(/(?:metode pembayaran|pembayaran|bayar pakai)\s*[:\s]*([a-zA-Z\s]+)/i);
+            if (m) pSumber = m[1].trim();
+        }
+
+        // ===========================
+        // TANGGAL
+        // ===========================
+        if (!pDate) {
+            let dm =
+                line.match(/(\d{2}[\/\-]\d{2}[\/\-]\d{2,4}\s+\d{2}:\d{2}(?::\d{2})?)/) ||
+                line.match(/(\d{1,2}\s+[a-zA-Z]+\s+\d{4}\s+\d{2}:\d{2})/);
+
+            if (dm) pDate = dm[1];
+        }
+    }
+
+    // ===============================
+    // NOMINAL
+    // ===============================
+    let nomMatch =
+        dataText.match(/(?:rp|total|bayar|nominal|stroom)[^\d]*(\d{2,3}[\.\,]\d{3}(?:[\.\,]\d{3})?)/i) ||
+        dataText.match(/Rp\s*([\d\.\,]+)/i);
+
+    if (nomMatch) pNominal = nomMatch[1].replace(/[\.\,]/g, '');
+
+    // ===============================
+    // MAPPING KE UI
+    // ===============================
+    if (pDate) {
+        document.getElementById('in-tanggal').value = pDate;
+    } else {
+        document.getElementById('in-tanggal').value =
+            new Date().toLocaleDateString('id-ID', {
+                weekday: 'long',
+                year: 'numeric',
+                month: 'long',
+                day: 'numeric',
+                hour: '2-digit',
+                minute: '2-digit',
+                second: '2-digit'
+            }).replace(/\./g, ':') + ' WIB';
+    }
+
+    if (pRef) document.getElementById('in-ref').value = pRef;
+    if (pNominal) document.getElementById('in-nominal').value = pNominal;
+
+    if (pNama) document.getElementById('in-pengirim-nama').value = pNama;
+
+    // sumber dana fallback
+    if (pSumber) document.getElementById('in-pengirim-rek').value = pSumber;
+    else if (dataText.toLowerCase().includes('dana')) document.getElementById('in-pengirim-rek').value = 'DANA';
+    else if (dataText.toLowerCase().includes('shopeepay')) document.getElementById('in-pengirim-rek').value = 'ShopeePay';
+    else if (dataText.toLowerCase().includes('ovo')) document.getElementById('in-pengirim-rek').value = 'OVO';
+    else if (dataText.toLowerCase().includes('brimo')) document.getElementById('in-pengirim-rek').value = 'BRImo';
+
+    if (pId) document.getElementById('in-tujuan-nama').value = pId;
+    if (pDaya) {
+        let dayaFix = pDaya.replace(/kwh/i, '').trim();
+        document.getElementById('in-tujuan-rek').value = dayaFix + ' KWH';
+    }
+
+    document.getElementById('in-tujuan-bank').value = 'Token PLN';
+
+    if (pToken) document.getElementById('in-no-pelanggan').value = pToken;
+
+    syncPreviewData();
+    return;
+}
 
             // -----------------------------------------------------------------
             // EKSEKUSI UMUM UNTUK TRANSFER BANK & E-WALLET
