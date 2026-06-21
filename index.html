@@ -4,12 +4,11 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <title>Mustakim Mini ATM</title>
-    <!-- Font dan Ikon -->
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Space+Mono&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
     
-    <!-- PUSTAKA TESSERACT.JS UNTUK BACA GAMBAR KE TEKS -->
     <script src="https://cdn.jsdelivr.net/npm/tesseract.js@4/dist/tesseract.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/html2canvas@1.4.1/dist/html2canvas.min.js"></script>
     
     <style>
         /* === VARIABEL WARNA (TEMA TERANG) === */
@@ -69,6 +68,27 @@
         .page { flex: 1; overflow-y: auto; padding-bottom: 80px; display: flex; flex-direction: column; }
         .page.hidden { display: none; }
         
+        /* === CHIP JENIS TRANSAKSI === */
+        .chip-jenis {
+            flex-shrink: 0;
+            display: flex; align-items: center; gap: 6px;
+            padding: 9px 14px;
+            border-radius: 20px;
+            border: 1px solid var(--border-color);
+            background: white;
+            color: var(--text-muted);
+            font-size: 12px;
+            font-weight: 600;
+            cursor: pointer;
+            white-space: nowrap;
+            transition: 0.2s;
+        }
+        .chip-jenis.active {
+            background: var(--primary);
+            border-color: var(--primary);
+            color: white;
+        }
+
         .upload-section { padding: 20px; display: flex; flex-direction: column; }
         .upload-card {
             border: 2px dashed #cbd5e1;
@@ -132,7 +152,7 @@
         .spinner { border: 4px solid #f3f3f3; border-top: 4px solid var(--primary); border-radius: 50%; width: 40px; height: 40px; animation: spin 1s linear infinite; margin-bottom: 15px; }
         @keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
 
-        /* Toast notifikasi ringan (pengganti alert yang mengganggu) */
+        /* Toast notifikasi ringan */
         .toast { position: fixed; bottom: 90px; left: 50%; transform: translateX(-50%) translateY(20px); background: #0f172a; color: white; padding: 12px 18px; border-radius: 10px; font-size: 13px; z-index: 100; opacity: 0; transition: 0.3s; max-width: 90%; text-align: center; pointer-events: none; box-shadow: 0 4px 15px rgba(0,0,0,0.2);}
         .toast.show { opacity: 1; transform: translateX(-50%) translateY(0); }
         .toast.error { background: #dc2626; }
@@ -157,17 +177,14 @@
 
     <div class="app-container">
         
-        <!-- LOADER -->
         <div class="loader-overlay" id="loader">
             <div class="spinner"></div>
             <h3 id="loader-title" style="font-size: 16px; color: var(--text-main);">Memproses Gambar...</h3>
             <p id="loader-sub" style="font-size: 12px; color: var(--text-muted); margin-top: 5px;">AI sedang membaca teks pada struk</p>
         </div>
 
-        <!-- TOAST NOTIFIKASI -->
         <div class="toast" id="toast"></div>
 
-        <!-- MODAL RAW OCR (untuk debug/copy teks mentah hasil pembacaan) -->
         <div id="raw-ocr-modal" style="display:none; position:fixed; inset:0; background:rgba(15,23,42,0.6); z-index:200; align-items:center; justify-content:center; padding:20px;">
             <div style="background:white; border-radius:14px; max-width:420px; width:100%; max-height:80vh; display:flex; flex-direction:column; overflow:hidden;">
                 <div style="padding:15px 18px; border-bottom:1px solid var(--border-color); display:flex; justify-content:space-between; align-items:center;">
@@ -187,8 +204,8 @@
             <div class="brand-info">
                 <div class="logo-box"><i class="fa-solid fa-receipt"></i></div>
                 <div class="brand-text">
-                    <h1>ATM MINI</h1>
-                    <p>Cetak Struk Transfer</p>
+                    <h1>MUSTAKIM MINI ATM</h1>
+                    <p>Cetak Struk Konter</p>
                 </div>
             </div>
             <div class="header-actions">
@@ -201,7 +218,24 @@
 
         <div id="page-scan" class="page">
             
-            <!-- SECTION 1: UPLOAD GAMBAR -->
+            <div class="upload-section" style="padding-bottom: 0;">
+                <label style="font-size: 11px; font-weight: 600; color: var(--text-muted); text-transform: uppercase; margin-bottom: 8px; display: block;">Jenis Transaksi</label>
+                <div id="jenis-transaksi-group" style="display: flex; gap: 8px; overflow-x: auto; padding-bottom: 4px; margin-bottom: 5px;">
+                    <button type="button" class="chip-jenis active" data-jenis="transfer" onclick="pilihJenisTransaksi('transfer', this)">
+                        <i class="fa-solid fa-money-bill-transfer"></i> Transfer Bank
+                    </button>
+                    <button type="button" class="chip-jenis" data-jenis="ewallet" onclick="pilihJenisTransaksi('ewallet', this)">
+                        <i class="fa-solid fa-wallet"></i> Topup E-Wallet
+                    </button>
+                    <button type="button" class="chip-jenis" data-jenis="listrik" onclick="pilihJenisTransaksi('listrik', this)">
+                        <i class="fa-solid fa-bolt"></i> Token PLN
+                    </button>
+                    <button type="button" class="chip-jenis" data-jenis="tagihan" onclick="pilihJenisTransaksi('tagihan', this)">
+                        <i class="fa-solid fa-file-invoice"></i> Bayar Tagihan
+                    </button>
+                </div>
+            </div>
+
             <div class="upload-section">
                 <div class="upload-card">
                     <img id="image-preview" style="display: none; width: 100%; max-height: 200px; object-fit: contain; border-radius: 12px; margin-bottom: 15px; border: 1px solid var(--border-color);" alt="Preview Struk" />
@@ -229,33 +263,35 @@
                 </div>
             </div>
 
-            <!-- SECTION 2: HASIL OCR (EDIT & PREVIEW) -->
             <div id="result-section">
                 <div class="tabs">
                     <div class="tab-btn active" onclick="switchTab('edit', this)"><i class="fa-solid fa-pen"></i> Edit Data</div>
                     <div class="tab-btn" onclick="switchTab('preview', this)"><i class="fa-solid fa-eye"></i> Pratinjau Struk</div>
                 </div>
 
-                <!-- TAB EDIT DATA -->
                 <div id="tab-edit" class="edit-form">
                     <div class="form-group">
                         <label>Tanggal & Waktu</label>
-                        <input type="text" id="in-tanggal" placeholder="17/06/2026 13:43">
+                        <input type="text" id="in-tanggal" placeholder="Minggu, 21 Juni 2026 10:30:00 WIB">
                     </div>
                     <div class="form-group">
                         <label>Nomor Referensi</label>
                         <input type="text" id="in-ref" placeholder="161267832073">
                     </div>
-                    
+
                     <div style="border-left: 3px solid var(--primary); padding-left: 10px; margin-top: 10px;">
-                        <div class="form-group"><label>Nama Pengirim</label><input type="text" id="in-pengirim-nama"></div>
-                        <div class="form-group" style="margin-top: 8px;"><label>Rekening Pengirim</label><input type="text" id="in-pengirim-rek"></div>
+                        <div class="form-group"><label id="label-pengirim-nama">Nama Pengirim</label><input type="text" id="in-pengirim-nama"></div>
+                        <div class="form-group" style="margin-top: 8px;"><label id="label-pengirim-rek">Rekening Pengirim</label><input type="text" id="in-pengirim-rek"></div>
                     </div>
 
                     <div style="border-left: 3px solid #10b981; padding-left: 10px; margin-top: 10px;">
-                        <div class="form-group"><label>Nama Tujuan</label><input type="text" id="in-tujuan-nama"></div>
-                        <div class="form-group" style="margin-top: 8px;"><label>Rekening Tujuan</label><input type="text" id="in-tujuan-rek"></div>
-                        <div class="form-group" style="margin-top: 8px;"><label>Bank Tujuan</label><input type="text" id="in-tujuan-bank" value="BANK BRI"></div>
+                        <div class="form-group"><label id="label-tujuan-nama">Nama Tujuan</label><input type="text" id="in-tujuan-nama"></div>
+                        <div class="form-group" style="margin-top: 8px;"><label id="label-tujuan-rek">Rekening Tujuan</label><input type="text" id="in-tujuan-rek"></div>
+                        <div class="form-group" style="margin-top: 8px;"><label id="label-tujuan-bank">Bank Tujuan</label><input type="text" id="in-tujuan-bank"></div>
+                        <div class="form-group" id="group-no-pelanggan" style="margin-top: 8px; display: none;">
+                            <label>Nomor Token</label>
+                            <input type="text" id="in-no-pelanggan" placeholder="123456789012">
+                        </div>
                     </div>
 
                     <div class="form-group" style="margin-top: 10px;">
@@ -268,7 +304,6 @@
                     </div>
                 </div>
 
-                <!-- TAB PREVIEW STRUK -->
                 <div id="tab-preview" class="preview-container">
                     <div class="receipt-paper" id="printable-receipt">
                         <div class="receipt-center">
@@ -280,20 +315,25 @@
                         <div class="receipt-row"><span>No. Referensi</span><span id="out-ref" style="text-align: right; word-break: break-all; max-width: 60%;">--</span></div>
                         
                         <div class="receipt-line"></div>
-                        <div class="receipt-row" style="margin-bottom: 5px;"><span>PENGIRIM</span></div>
+                        <div class="receipt-row" style="margin-bottom: 5px;"><span id="label-out-pengirim">PENGIRIM</span></div>
                         <div class="receipt-row"><span>Nama</span><span id="out-pengirim-nama" style="text-align: right;">--</span></div>
                         <div class="receipt-row"><span>Rekening</span><span id="out-pengirim-rek" style="text-align: right;">--</span></div>
                         
                         <div class="receipt-line"></div>
-                        <div class="receipt-row" style="margin-bottom: 5px;"><span>PENERIMA</span></div>
+                        <div class="receipt-row" style="margin-bottom: 5px;"><span id="label-out-tujuan">PENERIMA</span></div>
                         <div class="receipt-row"><span>Nama</span><span id="out-tujuan-nama" style="text-align: right; max-width: 65%;">--</span></div>
                         <div class="receipt-row"><span>Rekening</span><span id="out-tujuan-rek" style="text-align: right;">--</span></div>
                         <div class="receipt-row"><span>Bank</span><span id="out-tujuan-bank" style="text-align: right;">--</span></div>
+                        <div id="block-out-no-pelanggan" style="display: none; text-align: center; margin: 10px 0; padding: 8px; background: #f8fafc; border-radius: 6px;">
+                            <div style="font-size: 10px; color: #64748b; margin-bottom: 3px;">Nomor Token</div>
+                            <div id="out-no-pelanggan" style="font-weight: 700; font-size: 15px; letter-spacing: 1.5px;">--</div>
+                        </div>
                         
                         <div class="receipt-line"></div>
                         <div class="receipt-row"><span>Nominal</span><span id="out-nominal">Rp 0</span></div>
                         <div class="receipt-row"><span>Biaya Admin</span><span id="out-admin">Rp 0</span></div>
-                        <div class="receipt-row bold"><span>TOTAL</span><span id="out-total">Rp 0</span></div>
+                        
+                        <div class="receipt-row bold"><span>UNTUNG</span><span id="out-total">Rp 0</span></div>
                         
                         <div class="receipt-line"></div>
                         <div class="receipt-center" style="margin-top: 20px; color: #475569;">
@@ -302,15 +342,19 @@
                             <p style="margin-top:10px">==============================</p>
                         </div>
                     </div>
-                    <button class="btn btn-secondary" style="margin-top: 15px; width: 100%; max-width: 280px;" onclick="simpanKeRiwayat()">
-                        <i class="fa-solid fa-floppy-disk"></i> Simpan ke Riwayat
-                    </button>
+                    <div style="display: flex; gap: 10px; width: 100%; max-width: 280px; margin-top: 15px;">
+                        <button class="btn btn-secondary" style="flex: 1;" onclick="simpanKeRiwayat()">
+                            <i class="fa-solid fa-floppy-disk"></i> Simpan
+                        </button>
+                        <button class="btn" style="flex: 1; background: #25D366; color: white;" onclick="shareKeWhatsApp(this)">
+                            <i class="fa-brands fa-whatsapp"></i> Share WA
+                        </button>
+                    </div>
                 </div>
 
             </div>
         </div>
 
-        <!-- HALAMAN RIWAYAT -->
         <div id="page-riwayat" class="page hidden">
             <div style="padding: 20px;">
                 <h2 style="font-size: 16px; font-weight: 700; margin-bottom: 15px;">Riwayat Transaksi</h2>
@@ -325,7 +369,6 @@
             </div>
         </div>
 
-        <!-- NAVIGASI BAWAH -->
         <nav class="bottom-nav">
             <div class="nav-item active" id="nav-pindai" onclick="switchPage('scan')">
                 <i class="fa-solid fa-expand"></i>
@@ -339,19 +382,9 @@
 
     </div>
 
-    <!-- SCRIPT LOGIKA APLIKASI -->
     <script>
-        // ===================================================================
-        // KONFIGURASI API (Google Apps Script Web App)
-        // ===================================================================
-        // Ganti URL ini dengan URL deployment Web App Apps Script Anda
-        // (Deploy -> Manage deployments -> salin "Web app URL").
-        // URL harus diakhiri "/exec", BUKAN "/dev".
-        const API_URL = 'https://script.google.com/macros/s/AKfycbyG682VbXk8J05PE-9ZRmf-AounP1336lK70ySq9E-2bvX-g8VRCb1bK2kTB69-KKkb/exec';
+        const API_URL = 'https://script.google.com/macros/s/AKfycbyelWPHqoyS8FyL86IOOziHJADaWLhRrmWGYjMEclcr4iEsC0DX7j9FkES5A8wiHwxz/exec';
 
-        // ===================================================================
-        // 0. TOAST NOTIFIKASI (pengganti alert() yang memblokir UI)
-        // ===================================================================
         let toastTimer = null;
         function showToast(message, type = 'info', duration = 3000) {
             const toast = document.getElementById('toast');
@@ -363,7 +396,6 @@
             }, duration);
         }
 
-        // Tampilkan tombol "Lihat Teks Mentah" setelah OCR selesai
         function showRawOcrButton() {
             const btn = document.getElementById('btn-raw-ocr');
             if (btn) btn.style.display = 'block';
@@ -384,18 +416,75 @@
             });
         }
 
-        // 1. TABS LOGIC
-        // Catatan: TIDAK bergantung pada global `event` object, supaya aman
-        // dipanggil baik dari klik user (onclick="switchTab(...)") maupun
-        // dipanggil langsung dari kode (mis. setelah OCR selesai).
+        let jenisTransaksiAktif = 'transfer';
+
+        const KONFIGURASI_JENIS = {
+            transfer: {
+                labelUploadJudul: 'Upload Bukti Transfer',
+                labelUploadSub: 'Foto screenshot bukti transfer (BRImo, BCA, Mandiri, dll)',
+                labelPengirim: 'PENGIRIM', labelPengirimNama: 'Nama Pengirim', labelPengirimRek: 'Rekening Pengirim',
+                labelTujuan: 'PENERIMA', labelTujuanNama: 'Nama Tujuan', labelTujuanRek: 'Rekening Tujuan', labelTujuanBank: 'Bank Tujuan',
+                showNoPelanggan: false,
+                judulStruk: 'BUKTI TRANSFER'
+            },
+            ewallet: {
+                labelUploadJudul: 'Upload Bukti Topup E-Wallet',
+                labelUploadSub: 'Foto screenshot bukti topup DANA, OVO, GoPay, ShopeePay, dll',
+                labelPengirim: 'SUMBER DANA', labelPengirimNama: 'Nama Pemilik Rekening', labelPengirimRek: 'Rekening Sumber',
+                labelTujuan: 'TOPUP E-WALLET', labelTujuanNama: 'Nama Pemilik Akun', labelTujuanRek: 'Nomor HP / ID Akun', labelTujuanBank: 'E-Wallet Tujuan',
+                showNoPelanggan: false,
+                judulStruk: 'BUKTI TOPUP E-WALLET'
+            },
+            listrik: {
+                labelUploadJudul: 'Upload Bukti Token PLN',
+                labelUploadSub: 'Foto screenshot bukti beli token/bayar tagihan listrik PLN',
+                labelPengirim: 'PEMBAYAR', labelPengirimNama: 'Nama Pelanggan', labelPengirimRek: 'Rekening/Sumber Dana',
+                labelTujuan: 'PLN', labelTujuanNama: 'ID Pelanggan', labelTujuanRek: 'Jumlah kWH', labelTujuanBank: 'Pembayaran',
+                showNoPelanggan: true,
+                judulStruk: 'BUKTI TOKEN LISTRIK'
+            },
+            tagihan: {
+                labelUploadJudul: 'Upload Bukti Bayar Tagihan',
+                labelUploadSub: 'Foto screenshot bukti bayar BPJS, kredit, pulsa, internet, dll',
+                labelPengirim: 'PEMBAYAR', labelPengirimNama: 'Nama Pembayar', labelPengirimRek: 'Rekening/Sumber Dana',
+                labelTujuan: 'LAYANAN', labelTujuanNama: 'Nama Pelanggan', labelTujuanRek: 'Jenis Layanan', labelTujuanBank: 'Penyedia Layanan',
+                showNoPelanggan: true,
+                judulStruk: 'BUKTI PEMBAYARAN'
+            }
+        };
+
+        function pilihJenisTransaksi(jenis, btnEl) {
+            jenisTransaksiAktif = jenis;
+            const cfg = KONFIGURASI_JENIS[jenis];
+
+            document.querySelectorAll('.chip-jenis').forEach(c => c.classList.remove('active'));
+            if (btnEl) btnEl.classList.add('active');
+
+            const placeholderJudul = document.querySelector('#upload-placeholder h2');
+            const placeholderSub = document.querySelector('#upload-placeholder p');
+            if (placeholderJudul) placeholderJudul.innerText = cfg.labelUploadJudul;
+            if (placeholderSub) placeholderSub.innerText = cfg.labelUploadSub;
+
+            document.getElementById('label-pengirim-nama').innerText = cfg.labelPengirimNama;
+            document.getElementById('label-pengirim-rek').innerText = cfg.labelPengirimRek;
+            document.getElementById('label-tujuan-nama').innerText = cfg.labelTujuanNama;
+            document.getElementById('label-tujuan-rek').innerText = cfg.labelTujuanRek;
+            document.getElementById('label-tujuan-bank').innerText = cfg.labelTujuanBank;
+
+            document.getElementById('group-no-pelanggan').style.display = cfg.showNoPelanggan ? 'block' : 'none';
+
+            document.getElementById('label-out-pengirim').innerText = cfg.labelPengirim;
+            document.getElementById('label-out-tujuan').innerText = cfg.labelTujuan;
+            document.querySelector('.receipt-center p').innerText = cfg.judulStruk;
+            document.getElementById('block-out-no-pelanggan').style.display = cfg.showNoPelanggan ? 'block' : 'none';
+        }
+
         function switchTab(tabName, clickedEl) {
-            // Update UI Tab Buttons
             const tabs = document.querySelectorAll('.tab-btn');
             tabs.forEach(t => t.classList.remove('active'));
 
             let target = clickedEl;
             if (!target) {
-                // Fallback: cari tombol tab berdasarkan nama tab
                 target = Array.from(tabs).find(t =>
                     (tabName === 'edit' && t.textContent.includes('Edit')) ||
                     (tabName === 'preview' && t.textContent.includes('Pratinjau'))
@@ -403,24 +492,21 @@
             }
             if (target) target.classList.add('active');
 
-            // Switch Content
             if(tabName === 'edit') {
                 document.getElementById('tab-edit').style.display = 'flex';
                 document.getElementById('tab-preview').style.display = 'none';
             } else {
                 document.getElementById('tab-edit').style.display = 'none';
                 document.getElementById('tab-preview').style.display = 'flex';
-                syncPreviewData(); // Update preview sebelum ditampilkan
+                syncPreviewData();
             }
         }
 
-        // Helper format angka jadi ribuan (50000 -> 50.000)
         function formatRibuan(angka) {
             let n = parseInt(String(angka).replace(/\D/g, '')) || 0;
             return n.toLocaleString('id-ID');
         }
 
-        // 2. SINKRONISASI DATA EDIT KE PREVIEW
         function syncPreviewData() {
             document.getElementById('out-tanggal').innerText = document.getElementById('in-tanggal').value || '-';
             document.getElementById('out-ref').innerText = document.getElementById('in-ref').value || '-';
@@ -432,25 +518,27 @@
             document.getElementById('out-tujuan-rek').innerText = document.getElementById('in-tujuan-rek').value || '-';
             document.getElementById('out-tujuan-bank').innerText = document.getElementById('in-tujuan-bank').value || '-';
 
+            const noPelangganEl = document.getElementById('in-no-pelanggan');
+            if (noPelangganEl) {
+                document.getElementById('out-no-pelanggan').innerText = formatNoPelangganTampil(noPelangganEl.value);
+            }
+
             const nominal = document.getElementById('in-nominal').value || '0';
             const admin = document.getElementById('in-admin').value || '0';
             
             document.getElementById('out-nominal').innerText = 'Rp ' + formatRibuan(nominal);
             document.getElementById('out-admin').innerText = 'Rp ' + formatRibuan(admin);
             
-            // Hitung Total (format ribuan, aman dari NaN)
-            let n = parseInt(String(nominal).replace(/\D/g, '')) || 0;
+            // Perhitungan Untung
             let a = parseInt(String(admin).replace(/\D/g, '')) || 0;
-            let total = n + a;
-            document.getElementById('out-total').innerText = 'Rp ' + total.toLocaleString('id-ID');
+            let untung = a; 
+            document.getElementById('out-total').innerText = 'Rp ' + untung.toLocaleString('id-ID');
         }
 
-        // Auto update saat user mengetik di form
         document.querySelectorAll('.edit-form input').forEach(input => {
             input.addEventListener('input', syncPreviewData);
         });
 
-        // 3. LOGIKA UPLOAD & OCR GAMBAR
         document.getElementById('kamera-input').addEventListener('change', handleImageUpload);
         document.getElementById('galeri-input').addEventListener('change', handleImageUpload);
 
@@ -458,21 +546,19 @@
             const file = e.target.files[0];
             if (!file) return;
 
-            // Tampilkan Preview Gambar
             const reader = new FileReader();
             reader.onload = function(event) {
                 document.getElementById('image-preview').src = event.target.result;
                 document.getElementById('image-preview').style.display = 'block';
                 document.getElementById('upload-placeholder').style.display = 'none';
                 
-                // Mulai proses OCR
                 processOCR(event.target.result);
             };
             reader.onerror = function() {
                 showToast('Gagal membaca file gambar.', 'error');
             };
             reader.readAsDataURL(file);
-            e.target.value = ''; // Reset
+            e.target.value = '';
         }
 
         function processOCR(imageSrc) {
@@ -486,18 +572,13 @@
             loader.style.display = 'flex';
             resultSection.style.display = 'none';
 
-            // Fungsi fallback jika preprocessing gagal: tetap lanjut OCR pakai gambar asli
             function runOCR(srcToUse) {
                 Tesseract.recognize(
                     srcToUse,
                     'ind',
                     {
                         logger: m => console.log(m),
-                        // PSM 6: anggap gambar sebagai satu blok teks seragam
-                        // (cocok untuk struk yang barisnya rapi label:value).
                         tessedit_pageseg_mode: '6',
-                        // Whitelist eksplisit memastikan karakter bintang (*)
-                        // sensor rekening tidak dibuang Tesseract sebagai noise.
                         tessedit_char_whitelist: '0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz.,:/*- '
                     }
                 ).then(({ data: { text } }) => {
@@ -508,9 +589,6 @@
                     window.__lastRawOcrText = text;
                     showRawOcrButton();
 
-                    // extractDataFromText dipisah try-catch sendiri: kalau parsing
-                    // sebagian gagal, OCR tetap dianggap sukses (toast tidak
-                    // menampilkan "gagal total" padahal teks berhasil dibaca).
                     try {
                         extractDataFromText(text);
                         switchTab('edit');
@@ -529,12 +607,6 @@
                 });
             }
 
-            // Hitung threshold biner secara adaptif dari histogram gambar
-            // (metode Otsu sederhana), bukan nilai tetap 150. Watermark abu-abu
-            // muda dan teks abu-abu sekunder kontrasnya bisa berbeda-beda antar
-            // foto (tergantung pencahayaan/kompresi), jadi threshold tetap sering
-            // salah pilih -- kadang watermark ikut jadi "teks", kadang teks tipis
-            // (seperti bintang sensor rekening) malah hilang jadi "background".
             function computeOtsuThreshold(grayHistogram, totalPixels) {
                 let sum = 0;
                 for (let t = 0; t < 256; t++) sum += t * grayHistogram[t];
@@ -559,13 +631,10 @@
                 return threshold;
             }
 
-            // Pra-pemrosesan gambar: upscale + grayscale + binarization adaptif
             const img = new Image();
             img.onload = function() {
                 try {
-                    const SCALE = 2; // Upscale 2x: karakter kecil (mis. tanda bintang
-                                      // sensor rekening) jauh lebih mudah terbaca
-                                      // Tesseract pada resolusi lebih besar.
+                    const SCALE = 2; 
                     const canvas = document.createElement('canvas');
                     canvas.width = img.width * SCALE;
                     canvas.height = img.height * SCALE;
@@ -577,7 +646,6 @@
                     const imageData = ctx.getImageData(0, 0, canvas.width, canvas.height);
                     const data = imageData.data;
 
-                    // Bangun histogram grayscale dulu untuk hitung threshold adaptif
                     const grayValues = new Uint8ClampedArray(data.length / 4);
                     const histogram = new Array(256).fill(0);
                     for (let i = 0, p = 0; i < data.length; i += 4, p++) {
@@ -610,116 +678,190 @@
             img.src = imageSrc;
         }
 
-        // 4. EKSTRAKSI TEKS CERDAS (Mencocokkan Pola Struk Bank)
+        // 4. EKSTRAKSI TEKS CERDAS (Mencocokkan Pola Struk Bank & PLN)
         function extractDataFromText(text) {
-            // Memecah teks menjadi baris demi baris
             const lines = text.split('\n').map(l => l.trim()).filter(l => l.length > 0);
-            
-            let dataText = text.replace(/\n/g, ' '); // Gabungan teks untuk pencarian global
+            let dataText = text.replace(/\n/g, ' '); 
 
-            // 1. Cari Nominal (Rp diikuti angka dan titik)
+            // Kosongkan form sebelum diisi
+            document.getElementById('in-nominal').value = '';
+            document.getElementById('in-ref').value = '';
+            document.getElementById('in-tanggal').value = '';
+            document.getElementById('in-pengirim-nama').value = '';
+            document.getElementById('in-pengirim-rek').value = '';
+            document.getElementById('in-tujuan-nama').value = '';
+            document.getElementById('in-tujuan-rek').value = '';
+            document.getElementById('in-tujuan-bank').value = '';
+            const noPelangganElReset = document.getElementById('in-no-pelanggan');
+            if (noPelangganElReset) noPelangganElReset.value = '';
+
+            // =================================================================
+            // BLOK KHUSUS: Parsing Otomatis untuk STRUK TOKEN LISTRIK (PLN)
+            // =================================================================
+            if (jenisTransaksiAktif === 'listrik') {
+                let pDate = "", pRef = "", pNama = "", pId = "", pDaya = "", pToken = "", pNominal = "";
+
+                // 1. Ekstrak Tanggal & Token 20 Digit (Cari secara global karena sering terpotong barisnya)
+                const globalToken = dataText.match(/((?:\d{4}[\s\-]*){4}\d{4})/);
+                if (globalToken) pToken = globalToken[1].replace(/[\s\-]/g, '');
+
+                const globalDate = text.match(/(\d{2}[\/\-]\d{2}[\/\-]\d{2,4}\s+\d{2}:\d{2}(?::\d{2})?)/) || 
+                                   text.match(/(\d{1,2}\s+[a-zA-Z]+\s+\d{4}\s+\d{2}:\d{2})/);
+                if (globalDate) pDate = globalDate[1];
+
+                // 2. Ekstrak Label Spesifik (Baris demi Baris agar akurat)
+                for (let i = 0; i < lines.length; i++) {
+                    let line = lines[i];
+                    let lLower = line.toLowerCase();
+
+                    // Tangkap No Referensi / Struk
+                    if (lLower.includes('ref') || lLower.includes('trx') || lLower.includes('struk')) {
+                        const match = line.match(/(?:ref|trx|referensi|struk)\s*[:\s]*([a-zA-Z0-9]+)/i);
+                        if (match) pRef = match[1];
+                    }
+                    // Tangkap ID Pelanggan / No Meter
+                    if (lLower.includes('id pel') || lLower.includes('idpel') || lLower.includes('meter')) {
+                        const match = line.match(/(?:id\s*pel|idpel|meter)\s*[:\s]*(\d{11,12})/i);
+                        if (match) pId = match[1];
+                    }
+                    // Tangkap Nama Pelanggan
+                    if (lLower.match(/^nama/) || lLower.includes('nama pel')) {
+                        const match = line.match(/nama[a-z\s]*[:\s]+([^\n]+)/i);
+                        if (match) pNama = match[1].trim();
+                    }
+                    // Tangkap Tarif / Daya
+                    if (lLower.includes('daya') || lLower.includes('tarif') || lLower.includes('kwh')) {
+                        const match = line.match(/(?:daya|tarif|kwh)\s*[:\s]*([a-zA-Z0-9\/\.,\s]+)/i);
+                        if (match) pDaya = match[1].trim();
+                    }
+                    // Tangkap Nominal / RP Stroom
+                    if (lLower.includes('rp stroom') || lLower.includes('total') || lLower.includes('bayar') || lLower.includes('nominal')) {
+                         const match = line.match(/(?:stroom|total|bayar|nominal)[a-z\s]*[:\s]*[a-z]*\s*([\d\.,]+)/i);
+                         if (match) pNominal = match[1].replace(/[\.\,]/g, '');
+                    } else if (lLower.includes('rp') && !pNominal) {
+                         const match = line.match(/rp\s*([\d\.,]+)/i);
+                         if (match) pNominal = match[1].replace(/[\.\,]/g, '');
+                    }
+                }
+
+                // 3. Masukkan Data ke Form HTML
+                if (pDate) {
+                    document.getElementById('in-tanggal').value = pDate;
+                } else {
+                    const wkt = new Date();
+                    document.getElementById('in-tanggal').value = wkt.toLocaleDateString('id-ID', { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric', hour: '2-digit', minute: '2-digit', second: '2-digit' }).replace(/\./g, ':') + ' WIB';
+                }
+
+                if (pRef) document.getElementById('in-ref').value = pRef;
+                if (pNama) document.getElementById('in-pengirim-nama').value = pNama; 
+                if (pId) document.getElementById('in-tujuan-nama').value = pId; 
+                if (pDaya) document.getElementById('in-tujuan-rek').value = pDaya; 
+                
+                document.getElementById('in-tujuan-bank').value = "Token PLN"; 
+                
+                if (pToken && noPelangganElReset) noPelangganElReset.value = pToken; 
+                
+                if (pNominal) {
+                    document.getElementById('in-nominal').value = pNominal;
+                } else {
+                    const fallbackNominal = dataText.match(/Rp\s*([\d\.,]+)/i);
+                    if (fallbackNominal) document.getElementById('in-nominal').value = fallbackNominal[1].replace(/[\.\,]/g, '');
+                }
+
+                // Langsung sinkronkan ke gambar struk dan hentikan eksekusi
+                syncPreviewData();
+                return;
+            }
+
+            // =================================================================
+            // BLOK UMUM: Parsing untuk Transfer Bank & E-Wallet
+            // =================================================================
             const nominalMatch = dataText.match(/Rp\s*([\d\.]+)/i);
             if(nominalMatch) document.getElementById('in-nominal').value = nominalMatch[1].replace(/\./g, '');
 
-            // 2. Cari No Referensi (deretan angka panjang setelah kata Ref)
-            const refMatch = dataText.match(/Ref(?:erensi)?.*?(\d{10,})/i);
+            const refMatch = dataText.match(/(?:Ref(?:erensi)?|ID\s*Transaksi)[:\s]*\D{0,5}(\d{10,})/i);
             if(refMatch) document.getElementById('in-ref').value = refMatch[1];
 
-            // 3. Cari Tanggal (contoh pola: 17 Juni 2026, 13:43:32 WIB)
-            const dateMatch = dataText.match(/(\d{1,2}\s+[A-Za-z]+\s+\d{4}[,\s]+\d{2}:\d{2}(?::\d{2})?(?:\s+WIB|\s+WITA|\s+WIT)?)/i);
-            if(dateMatch) document.getElementById('in-tanggal').value = dateMatch[1];
+            const dateMatch = dataText.match(/(\d{1,2}\s+[A-Za-z]+\s+\d{4})\D{0,3}(\d{2}:\d{2}(?::\d{2})?)\s*(WIB|WITA|WIT)?/i);
+            if (dateMatch) {
+                document.getElementById('in-tanggal').value =
+                    dateMatch[1] + ', ' + dateMatch[2] + (dateMatch[3] ? ' ' + dateMatch[3].toUpperCase() : '');
+            } else {
+                const waktuSekarang = new Date();
+                const opsiFormat = { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric', hour: '2-digit', minute: '2-digit', second: '2-digit' };
+                const formatTanggalPanjang = waktuSekarang.toLocaleDateString('id-ID', opsiFormat).replace(/\./g, ':') + ' WIB';
+                document.getElementById('in-tanggal').value = formatTanggalPanjang;
+            }
 
-            // 4. Ekstrak Pengirim & Penerima dengan metode Blok (Block Parsing)
             let section = 'none';
             let pengirimData = [];
             let tujuanData = [];
 
+            const stripLabelPrefix = (line) => {
+                return line.replace(/^(nama|rekening|akun(?:\s*dana)?|no\.?\s*rekening|nomor\s*hp|id\s*akun)[:\s]+/i, '').trim();
+            };
+
             for (let line of lines) {
                 let lLower = line.toLowerCase();
-                // Deteksi awal blok
-                if (lLower.includes('sumber dana') || lLower === 'dari') {
+                if (lLower.includes('sumber dana') || lLower === 'dari' || lLower.includes('pembayar') || lLower.includes('akun sumber')) {
                     section = 'pengirim';
                     continue;
                 }
-                if (lLower.includes('tujuan') || lLower === 'ke') {
+                if (lLower.includes('tujuan') || lLower === 'ke' || lLower.includes('detail pembayaran') || lLower.includes('detail tagihan') || lLower.includes('penerima')) {
                     section = 'tujuan';
                     continue;
                 }
-                // Deteksi akhir blok
-                if (lLower.includes('jenis transaksi') || lLower.includes('catatan') || lLower.includes('nominal')) {
+                if (lLower.includes('jenis transaksi') || lLower.includes('catatan') || lLower.includes('nominal') || lLower.includes('rincian') || lLower.includes('detail transaksi') || lLower.includes('metode pembayaran')) {
                     section = 'none';
                 }
 
-                if (section === 'pengirim') pengirimData.push(line);
-                if (section === 'tujuan') tujuanData.push(line);
+                if (section === 'pengirim') pengirimData.push(stripLabelPrefix(line));
+                if (section === 'tujuan') tujuanData.push(stripLabelPrefix(line));
             }
 
-            // Fungsi pembersih: Membuang inisial ikon (seperti "KM " atau "OE " di awal nama)
+            const noHpMatch = dataText.match(/\b(0|62)8[0-9]{8,11}\b/);
+
             const cleanName = (name) => {
                 let parts = name.split(' ');
                 if (parts.length > 1 && parts[0].length <= 3 && parts[0] === parts[0].toUpperCase()) {
-                    parts.shift(); // Buang inisial
+                    parts.shift();
                 }
-                return parts.join(' ').replace(/[^a-zA-Z\s\.]/g, '').trim(); // Hapus simbol aneh
+                return parts.join(' ').replace(/[^a-zA-Z\s\.]/g, '').trim();
             };
 
-            // Fungsi identifikasi: Apakah baris ini nomor rekening atau nama bank?
-            // Threshold diturunkan dari 8 ke 5 karakter, karena watermark/sensor
-            // bintang pada struk BRImo sering membuat OCR membaca rekening jadi
-            // lebih pendek dari aslinya (mis. "2216 **** **** 501" terbaca
-            // tidak lengkap). Tetap mensyaratkan minimal ada digit asli, supaya
-            // tidak salah tangkap teks biasa.
             const isBankAccount = (str) => /[\d\*\.\s\-xX]{5,}/.test(str) && (str.match(/\d/g) || []).length >= 2;
+            const isBankName = (str) => /bank|bca|\bbri\b|beri|mandiri|bni|bsi|cimb|dana|ovo|gopay|gojek|shopeepay|linkaja|pln|pdam|telkomsel|indosat|\bxl\b|tri\b|smartfren|indihome|wifi|listrik|pulsa|internet/i.test(str);
 
-            // Toleransi typo OCR umum: huruf "BRI" kadang terbaca "BERI" atau
-            // "8RI" karena kemiripan bentuk font pada struk watermark.
-            const isBankName = (str) => /bank|bca|\bbri\b|beri|mandiri|bni|bsi|cimb/i.test(str);
-
-            // Auto-koreksi nama bank yang tercampur inisial avatar (mis. "G BANK
-            // BRI", "YA BANKBERI") jadi format bersih "BANK BRI". Cek pola typo
-            // "BERI" SEBELUM "BRI" murni supaya tidak salah urutan pencocokan.
             const cleanBankName = (str) => {
                 let s = str.toUpperCase();
                 if (s.includes('BERI') || s.includes('BRI')) return 'BANK BRI';
                 if (s.includes('BCA')) return 'BANK BCA';
                 if (s.includes('MANDIRI')) return 'BANK MANDIRI';
                 if (s.includes('BNI')) return 'BANK BNI';
-                return str;
+                if (s.includes('DANA')) return 'DANA';
+                if (s.includes('OVO')) return 'OVO';
+                if (s.includes('GOPAY') || s.includes('GOJEK')) return 'GOPAY';
+                if (s.includes('SHOPEEPAY')) return 'SHOPEEPAY';
+                if (s.includes('LINKAJA')) return 'LINKAJA';
+                if (s.includes('PLN') || s.includes('LISTRIK')) return 'PLN';
+                if (s.includes('PDAM')) return 'PDAM';
+                if (s.includes('TELKOMSEL')) return 'TELKOMSEL';
+                if (s.includes('INDOSAT')) return 'INDOSAT';
+                if (s.includes('INDIHOME') || s.includes('WIFI')) return 'INDIHOME';
+                return str.trim();
             };
 
-            // --- Parsing Blok Pengirim ---
-            // Catatan: nomor rekening TIDAK ditebak ulang formatnya, ditampilkan
-            // apa adanya hasil OCR (hanya titik->bintang) agar user yang koreksi manual.
-            // pBank ditangkap juga (meski tidak dipakai di form saat ini) supaya
-            // baris nama bank pengirim tidak salah ditangkap sebagai nama orang.
-            // Bersihkan hasil OCR baris rekening: ambil dari digit pertama sampai
-            // digit terakhir di baris itu (apa adanya), lalu rapikan bagian
-            // tengahnya (kemungkinan salah baca tanda bintang sensor "****")
-            // jadi format standar bank Indonesia: "XXXX **** **** XXX"
-            // (4 digit awal + 2 grup bintang + sisa digit akhir).
             const cleanRekeningOcr = (str) => {
-                // Potong dari digit pertama sampai digit terakhir saja (buang
-                // kata lain yang mungkin ikut tertangkap di awal/akhir baris)
                 const firstDigit = str.search(/\d/);
                 const lastDigitFromEnd = [...str].reverse().join('').search(/\d/);
                 if (firstDigit === -1) return str.trim();
                 const lastDigit = str.length - 1 - lastDigitFromEnd;
                 let core = str.substring(firstDigit, lastDigit + 1);
 
-                // Kalau core HANYA berisi digit, spasi, dan/atau tanda bintang
-                // (tidak ada huruf sampah) -> ini rekening BERSIH, baik yang
-                // memang sudah tersensor rapi (mis. "2216 **** **** 501") atau
-                // yang memang tidak disensor sama sekali (mis. rekening tujuan
-                // "3843 0100 4391 505"). JANGAN diubah/disensor ulang.
                 if (/^[\d\*\s]+$/.test(core)) {
                     return core.trim().replace(/\s+/g, ' ');
                 }
 
-                // Sampai sini berarti core mengandung huruf (kemungkinan salah
-                // baca tanda bintang sensor oleh OCR). Susun ulang jadi format
-                // baku bank Indonesia "XXXX **** **** XXX" dari digit yang
-                // berhasil terbaca, HANYA jika digitnya cukup (>=6) untuk pola
-                // itu masuk akal sebagai rekening tersensor.
                 const allDigits = core.match(/\d/g) || [];
                 if (allDigits.length >= 6) {
                     const depan = allDigits.slice(0, 4).join('');
@@ -727,9 +869,6 @@
                     return `${depan} **** **** ${belakang}`;
                 }
 
-                // Fallback: digit terlalu sedikit untuk pola standar, tampilkan
-                // apa adanya (huruf acak dirapikan jadi satu blok bintang)
-                // supaya user tetap bisa menilai & mengoreksi manual.
                 core = core.replace(/[A-Za-z\.\-]+/g, ' **** ').replace(/\s+/g, ' ');
                 return core.trim();
             };
@@ -745,10 +884,6 @@
                 }
             }
 
-            // Fallback terakhir: kalau sampai akhir blok pengirim masih kosong,
-            // ambil baris APAPUN di blok pengirim yang mengandung minimal 2 digit
-            // (selain baris nama & nama bank yang sudah dipakai), supaya rekening
-            // tidak dibiarkan kosong total walau hasil OCR-nya tidak sempurna.
             if (pRek === "") {
                 for (let item of pengirimData) {
                     if (isBankName(item)) continue;
@@ -759,7 +894,6 @@
                 }
             }
 
-            // --- Parsing Blok Tujuan ---
             let tNama = "", tRek = "", tBank = "";
             for (let item of tujuanData) {
                 if (isBankAccount(item) && tRek === "") {
@@ -771,7 +905,6 @@
                 }
             }
 
-            // Fallback yang sama untuk blok tujuan
             if (tRek === "") {
                 for (let item of tujuanData) {
                     if (isBankName(item)) continue;
@@ -782,34 +915,26 @@
                 }
             }
 
-            // Terapkan ke form jika data ditemukan (kosongkan kolom sebelum diisi otomatis)
-            document.getElementById('in-pengirim-nama').value = "";
-            document.getElementById('in-pengirim-rek').value = "";
-            document.getElementById('in-tujuan-nama').value = "";
-            document.getElementById('in-tujuan-rek').value = "";
-
             if (pNama) document.getElementById('in-pengirim-nama').value = pNama;
             if (pRek) document.getElementById('in-pengirim-rek').value = pRek;
             
             if (tNama) document.getElementById('in-tujuan-nama').value = tNama;
             if (tRek) document.getElementById('in-tujuan-rek').value = tRek;
-            if (tBank) document.getElementById('in-tujuan-bank').value = tBank.toUpperCase();
+            if (tBank) document.getElementById('in-tujuan-bank').value = tBank;
 
-            // Sinkronkan hasil tangkapan ke layar pratinjau struk
+            if (jenisTransaksiAktif === 'ewallet' && noHpMatch) {
+                const tujuanNamaEl = document.getElementById('in-tujuan-nama');
+                if (!tujuanNamaEl.value) tujuanNamaEl.value = noHpMatch[0];
+            }
+
+            const noPelangganEl = document.getElementById('in-no-pelanggan');
+            if (noPelangganEl && jenisTransaksiAktif === 'tagihan') {
+                const noPelangganMatch = dataText.match(/(?:id\s*pelanggan|no\.?\s*pelanggan|nomor\no*token|nomor\s*meter|nomor\s*token|customer\s*id)[:\s]*([\w\-]{4,})/i);
+                if (noPelangganMatch) noPelangganEl.value = noPelangganMatch[1];
+            }
+
             syncPreviewData();
         }
-
-        // ===================================================================
-        // 5. FITUR CETAK BLUETOOTH THERMAL (WEB BLUETOOTH API) - MP-58A1
-        // ===================================================================
-        //
-        // Printer MP-58A1 (dan kebanyakan printer thermal 58mm generik
-        // sekelas Goojprt/Zjiang) memakai chip BLE "CC41" dengan:
-        //   Service UUID        : 49535343-fe7d-4ae5-8fa9-9fafd205e455
-        //   Characteristic Write: 49535343-8841-43f4-a8d4-ecbe34729bb3
-        //
-        // Sebagai jaga-jaga (unit/varian firmware kadang beda), kita siapkan
-        // beberapa kandidat UUID umum lain dan dicoba berurutan.
 
         const PRINTER_PROFILES = [
             {
@@ -829,7 +954,6 @@
             }
         ];
 
-        // Menyimpan koneksi printer supaya tidak perlu pairing ulang tiap cetak
         let printerConn = { device: null, characteristic: null, profile: null };
 
         function setPrinterButtonState(connected, label) {
@@ -839,10 +963,7 @@
             labelEl.innerText = label;
         }
 
-        // Cari characteristic yang valid dari beberapa kandidat UUID
         async function connectToPrinter() {
-            // Minta user pilih perangkat. acceptAllDevices dipakai karena nama
-            // dan service printer thermal murah sangat bervariasi antar unit.
             const device = await navigator.bluetooth.requestDevice({
                 acceptAllDevices: true,
                 optionalServices: PRINTER_PROFILES.map(p => p.service)
@@ -857,7 +978,6 @@
 
             const server = await device.gatt.connect();
 
-            // Coba tiap profil UUID sampai ketemu yang cocok dengan printer ini
             let lastError = null;
             for (const profile of PRINTER_PROFILES) {
                 try {
@@ -873,7 +993,6 @@
                 }
             }
 
-            // Tidak ada profil yang cocok -> coba scan semua service yang tersedia di device
             try {
                 const services = await server.getPrimaryServices();
                 for (const service of services) {
@@ -893,8 +1012,6 @@
             throw lastError || new Error('Tidak ditemukan characteristic yang bisa ditulisi pada perangkat ini.');
         }
 
-        // ESC/POS: kirim per-chunk kecil dengan jeda, supaya tidak gagal/terpotong
-        // di printer BLE murah yang punya batas MTU kecil (umumnya ~20 byte).
         async function writeInChunks(characteristic, bytes, chunkSize = 20, delayMs = 25) {
             for (let i = 0; i < bytes.length; i += chunkSize) {
                 const chunk = bytes.slice(i, i + chunkSize);
@@ -907,18 +1024,15 @@
             }
         }
 
-        // --- Helper format teks struk lebar 32 karakter (kertas 58mm) ---
         const PAPER_WIDTH = 32;
 
         function padLabelValue(label, value, width = PAPER_WIDTH) {
-            // label kiri, value rata kanan, dipotong/wrap kalau kepanjangan
             value = String(value || '-');
             const maxValueLen = width - label.length - 1;
             if (value.length <= maxValueLen) {
                 const spaces = width - label.length - value.length;
                 return label + ' '.repeat(Math.max(1, spaces)) + value;
             }
-            // Value kepanjangan -> taruh value di baris berikutnya, rata kanan
             const lines = [];
             lines.push(label);
             let remaining = value;
@@ -944,48 +1058,59 @@
             const admin = formatRibuan(document.getElementById('in-admin').value || '0');
             const total = document.getElementById('out-total').innerText.replace('Rp', '').trim();
             const line = '-'.repeat(PAPER_WIDTH);
+            const cfg = KONFIGURASI_JENIS[jenisTransaksiAktif] || KONFIGURASI_JENIS.transfer;
 
-            let t = "\x1B\x40"; // Initialize printer
-            t += "\x1B\x61\x01"; // Align center
-            t += "\x1B\x21\x10"; // Font: double height (judul lebih jelas)
+            let t = "\x1B\x40"; 
+            t += "\x1B\x61\x01"; 
+            t += "\x1B\x21\x10"; 
             t += "MUSTAKIM MINI ATM\n";
-            t += "\x1B\x21\x00"; // Font normal (reset eksplisit sebelum lanjut)
-            t += "BUKTI TRANSFER\n";
+            t += "\x1B\x21\x00"; 
+            t += cfg.judulStruk + "\n";
             t += line + "\n";
 
-            t += "\x1B\x61\x00"; // Align left
+            t += "\x1B\x61\x00"; 
             t += padLabelValue('Tanggal', get('in-tanggal')) + "\n";
             t += padLabelValue('No.Ref', get('in-ref')) + "\n";
             t += line + "\n";
 
-            t += "PENGIRIM\n";
+            t += cfg.labelPengirim + "\n";
             t += padLabelValue('Nama', get('in-pengirim-nama')) + "\n";
             t += padLabelValue('Rek', get('in-pengirim-rek')) + "\n";
             t += line + "\n";
 
-            t += "PENERIMA\n";
+            t += cfg.labelTujuan + "\n";
             t += padLabelValue('Nama', get('in-tujuan-nama')) + "\n";
             t += padLabelValue('Rek', get('in-tujuan-rek')) + "\n";
             t += padLabelValue('Bank', get('in-tujuan-bank')) + "\n";
+
+            if (cfg.showNoPelanggan) {
+                const noPelangganFormatted = formatNoPelangganTampil(get('in-no-pelanggan'));
+
+                t += "\x1B\x61\x01"; 
+                t += "Nomor Token\n";
+                t += "\x1B\x45\x01"; 
+                if (noPelangganFormatted.length <= 16) {
+                    t += "\x1B\x21\x10"; 
+                    t += noPelangganFormatted + "\n";
+                    t += "\x1B\x21\x00"; 
+                } else {
+                    t += noPelangganFormatted + "\n";
+                }
+                t += "\x1B\x45\x00"; 
+                t += "\x1B\x61\x00"; 
+            }
             t += line + "\n";
 
             t += padLabelValue('Nominal', 'Rp ' + nominal) + "\n";
             t += padLabelValue('Admin', 'Rp ' + admin) + "\n";
-            t += "\x1B\x45\x01"; // Bold on
-            t += padLabelValue('TOTAL', 'Rp ' + total) + "\n";
-            t += "\x1B\x45\x00"; // Bold off
+            t += "\x1B\x45\x01"; 
             t += line + "\n";
 
-            t += "\x1B\x61\x01"; // Align center
+            t += "\x1B\x61\x01"; 
             t += "Transaksi berhasil\n";
             t += "Terima kasih telah\nmenggunakan layanan kami\n";
-            t += "\n\n\n"; // feed secukupnya saja sebelum sobek manual
-            // Catatan: perintah potong otomatis (GS V) SENGAJA tidak dikirim.
-            // MP-58A1 dan kebanyakan printer thermal 58mm generik tidak
-            // dilengkapi cutter mekanis (potong manual oleh pengguna), dan
-            // mengirim command itu ke printer yang tidak support bisa membuat
-            // printer melakukan feed tambahan yang tidak perlu (kertas kosong
-            // panjang) karena command tidak dikenali dan dianggap data lain.
+            t += "=".repeat(PAPER_WIDTH) + "\n";
+            t += "\n\n\n"; 
 
             return t;
         }
@@ -1010,7 +1135,6 @@
             btn.disabled = true;
 
             try {
-                // Konek dulu kalau belum / koneksi putus
                 if (!printerConn.characteristic || !printerConn.device || !printerConn.device.gatt.connected) {
                     await connectToPrinter();
                 }
@@ -1039,9 +1163,6 @@
             }
         }
 
-        // ===================================================================
-        // 6. NAVIGASI HALAMAN (Pindai <-> Riwayat)
-        // ===================================================================
         function switchPage(page) {
             const pageScan = document.getElementById('page-scan');
             const pageRiwayat = document.getElementById('page-riwayat');
@@ -1062,9 +1183,6 @@
             }
         }
 
-        // ===================================================================
-        // 7. SIMPAN & MUAT RIWAYAT TRANSAKSI (via Apps Script API)
-        // ===================================================================
         function isApiConfigured() {
             return API_URL && !API_URL.includes('GANTI_DENGAN_URL_WEB_APP_ANDA');
         }
@@ -1074,9 +1192,10 @@
                 showToast('API belum dikonfigurasi. Set API_URL di kode terlebih dahulu.', 'error', 4000);
                 return;
             }
-            if (!validateBeforePrint()) return; // pakai validasi nominal yang sama
+            if (!validateBeforePrint()) return;
 
             const payload = {
+                jenis: jenisTransaksiAktif,
                 tanggal: document.getElementById('in-tanggal').value,
                 ref: document.getElementById('in-ref').value,
                 pengirim: document.getElementById('in-pengirim-nama').value,
@@ -1084,15 +1203,13 @@
                 tujuan: document.getElementById('in-tujuan-nama').value,
                 rekTujuan: document.getElementById('in-tujuan-rek').value,
                 bank: document.getElementById('in-tujuan-bank').value,
+                noPelanggan: document.getElementById('in-no-pelanggan').value,
                 nominal: document.getElementById('in-nominal').value,
                 admin: document.getElementById('in-admin').value
             };
 
             try {
                 showToast('Menyimpan transaksi...', 'info', 2000);
-                // Content-Type: text/plain dipakai sengaja (bukan application/json)
-                // supaya browser TIDAK mengirim preflight OPTIONS, karena Apps
-                // Script Web App tidak bisa merespons preflight CORS dengan benar.
                 const res = await fetch(API_URL, {
                     method: 'POST',
                     headers: { 'Content-Type': 'text/plain;charset=utf-8' },
@@ -1107,6 +1224,133 @@
             } catch (error) {
                 console.error(error);
                 showToast('Gagal terhubung ke server riwayat.', 'error', 4000);
+            }
+        }
+
+        function formatNoPelangganTampil(raw) {
+            const clean = String(raw || '').replace(/\s|-/g, '');
+            if (!clean) return '-';
+            return clean.match(/.{1,4}/g)?.join('-') || clean;
+        }
+
+        function buildReceiptPlainText() {
+            const get = (id) => document.getElementById(id).value || '-';
+            const nominal = formatRibuan(document.getElementById('in-nominal').value || '0');
+            const admin = formatRibuan(document.getElementById('in-admin').value || '0');
+            const total = document.getElementById('out-total').innerText.replace('Rp', '').trim();
+            const cfg = KONFIGURASI_JENIS[jenisTransaksiAktif] || KONFIGURASI_JENIS.transfer;
+            const line = '-'.repeat(28);
+
+            let msg = `*MUSTAKIM MINI ATM*\n${cfg.judulStruk}\n${line}\n`;
+            msg += `Tanggal: ${get('in-tanggal')}\n`;
+            msg += `No. Ref: ${get('in-ref')}\n${line}\n`;
+
+            msg += `*${cfg.labelPengirim}*\n`;
+            msg += `Nama: ${get('in-pengirim-nama')}\n`;
+            msg += `Rek: ${get('in-pengirim-rek')}\n${line}\n`;
+
+            msg += `*${cfg.labelTujuan}*\n`;
+            msg += `Nama: ${get('in-tujuan-nama')}\n`;
+            msg += `Rek: ${get('in-tujuan-rek')}\n`;
+            msg += `Bank: ${get('in-tujuan-bank')}\n`;
+            if (cfg.showNoPelanggan) {
+                msg += `Nomor Token: *${formatNoPelangganTampil(get('in-no-pelanggan'))}*\n`;
+            }
+            msg += `${line}\n`;
+
+            msg += `Nominal: Rp ${nominal}\n`;
+            msg += `Admin: Rp ${admin}\n`;
+            msg += `Transaksi berhasil. Terima kasih telah menggunakan layanan kami.`;
+
+            return msg;
+        }
+
+        async function renderReceiptAsImage() {
+            const receiptEl = document.getElementById('printable-receipt');
+            const tabPreview = document.getElementById('tab-preview');
+            const tabEdit = document.getElementById('tab-edit');
+            const previewWasHidden = tabPreview.style.display !== 'flex';
+            const editWasVisible = tabEdit.style.display !== 'none';
+
+            if (previewWasHidden) {
+                tabPreview.style.display = 'flex';
+                tabEdit.style.display = 'none';
+            }
+
+            syncPreviewData();
+
+            await new Promise(resolve => setTimeout(resolve, 50));
+
+            let canvas;
+            try {
+                canvas = await html2canvas(receiptEl, {
+                    backgroundColor: '#ffffff',
+                    scale: 2, 
+                    useCORS: true,
+                    logging: false
+                });
+            } finally {
+                if (previewWasHidden) {
+                    tabPreview.style.display = 'none';
+                    tabEdit.style.display = editWasVisible ? 'flex' : 'none';
+                }
+            }
+
+            return new Promise((resolve, reject) => {
+                canvas.toBlob((blob) => {
+                    if (blob) resolve(blob);
+                    else reject(new Error('Gagal membuat gambar dari struk'));
+                }, 'image/png');
+            });
+        }
+
+        function downloadBlob(blob, filename) {
+            const url = URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = filename;
+            document.body.appendChild(a);
+            a.click();
+            document.body.removeChild(a);
+            setTimeout(() => URL.revokeObjectURL(url), 1000);
+        }
+
+        async function shareKeWhatsApp(btnEl) {
+            if (!validateBeforePrint()) return; 
+
+            const originalHtml = btnEl ? btnEl.innerHTML : null;
+            if (btnEl) {
+                btnEl.disabled = true;
+                btnEl.innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i> Membuat gambar...';
+            }
+
+            try {
+                const blob = await renderReceiptAsImage();
+                const filename = `struk-${(document.getElementById('in-ref').value || 'mustakim').replace(/\s/g, '')}.png`;
+                const file = new File([blob], filename, { type: 'image/png' });
+
+                if (navigator.share && navigator.canShare && navigator.canShare({ files: [file] })) {
+                    await navigator.share({
+                        files: [file],
+                        title: 'Struk Mustakim Mini ATM',
+                        text: 'Bukti transaksi dari Mustakim Mini ATM'
+                    });
+                    showToast('Struk siap dibagikan.', 'success');
+                } else {
+                    downloadBlob(blob, filename);
+                    showToast('Gambar struk diunduh. Silakan kirim manual via WhatsApp.', 'info', 4500);
+                }
+            } catch (error) {
+                console.error(error);
+                if (error.name === 'AbortError') {
+                } else {
+                    showToast('Gagal membuat gambar struk untuk dibagikan.', 'error', 4000);
+                }
+            } finally {
+                if (btnEl && originalHtml) {
+                    btnEl.disabled = false;
+                    btnEl.innerHTML = originalHtml;
+                }
             }
         }
 
@@ -1139,9 +1383,13 @@
                 result.data.forEach(trx => {
                     const card = document.createElement('div');
                     card.className = 'riwayat-card';
+                    const jenisLabel = (KONFIGURASI_JENIS[trx.jenis] || KONFIGURASI_JENIS.transfer).judulStruk;
                     card.innerHTML = `
                         <div class="riwayat-card-top">
-                            <span class="riwayat-nominal">Rp ${formatRibuan(trx.total)}</span>
+                            <div>
+                                <span class="riwayat-nominal">Admin: Rp ${formatRibuan(trx.admin)}</span>
+                                <div style="font-size:10px; color:var(--primary); font-weight:600; text-transform:uppercase; margin-top:2px;">${jenisLabel}</div>
+                            </div>
                             <span class="riwayat-tanggal">${trx.tanggal || '-'}</span>
                         </div>
                         <div class="riwayat-detail">
