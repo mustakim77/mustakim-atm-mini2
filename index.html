@@ -11,6 +11,8 @@
     <script src="https://cdn.jsdelivr.net/npm/html2canvas@1.4.1/dist/html2canvas.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
     
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.min.js"></script>
+    
     <style>
         :root { --bg-body: #f1f5f9; --bg-app: #ffffff; --text-main: #0f172a; --text-muted: #64748b; --primary: #3b82f6; --primary-hover: #2563eb; --border-color: #e2e8f0; --card-bg: #f8fafc; }
         * { box-sizing: border-box; margin: 0; padding: 0; font-family: 'Inter', sans-serif; -webkit-tap-highlight-color: transparent; }
@@ -46,8 +48,8 @@
         .edit-form { padding: 0 20px; display: flex; flex-direction: column; gap: 12px; }
         .form-group { display: flex; flex-direction: column; gap: 5px; }
         .form-group label { font-size: 11px; font-weight: 600; color: var(--text-muted); text-transform: uppercase; }
-        .form-group input, .form-group textarea { padding: 10px 12px; border: 1px solid var(--border-color); border-radius: 8px; font-size: 14px; color: var(--text-main); background: #fff; font-family: 'Inter', sans-serif;}
-        .form-group input:focus, .form-group textarea:focus { outline: none; border-color: var(--primary); }
+        .form-group input, .form-group textarea, .form-group select { padding: 10px 12px; border: 1px solid var(--border-color); border-radius: 8px; font-size: 14px; color: var(--text-main); background: #fff; font-family: 'Inter', sans-serif;}
+        .form-group input:focus, .form-group textarea:focus, .form-group select:focus { outline: none; border-color: var(--primary); }
         .form-group textarea { font-family: 'Space Mono', monospace; resize: vertical; }
         
         .preview-container { padding: 0 20px 20px 20px; display: none; flex-direction: column; align-items: center; }
@@ -57,7 +59,6 @@
         .receipt-center p { font-size: 11px; }
         .receipt-line { border-top: 1px dashed #94a3b8; margin: 8px 0; }
         
-        /* KODE CSS BARU UNTUK SEJAJARAN KOLOM (:) */
         .receipt-row { display: flex; margin-bottom: 5px; font-size: 11px; }
         .receipt-row.bold { font-weight: bold; font-size: 12px; margin-top: 8px; }
         .r-label { width: 95px; flex-shrink: 0; }
@@ -71,7 +72,7 @@
         .toast.show { opacity: 1; transform: translateX(-50%) translateY(0); }
         .toast.error { background: #dc2626; }
         .toast.success { background: #059669; }
-        .riwayat-card { background: var(--card-bg); border: 1px solid var(--border-color); border-radius: 12px; padding: 14px; }
+        .riwayat-card { background: var(--card-bg); border: 1px solid var(--border-color); border-radius: 12px; padding: 14px; margin-bottom: 10px;}
         .riwayat-card-top { display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 8px; }
         .riwayat-nominal { font-weight: 700; font-size: 15px; color: var(--primary); }
         .riwayat-tanggal { font-size: 11px; color: var(--text-muted); }
@@ -117,7 +118,6 @@
             </div>
         </header>
 
-        <!-- HALAMAN 1: SCAN STRUK -->
         <div id="page-scan" class="page">
             <div class="upload-section" style="padding-bottom: 0;">
                 <label style="font-size: 11px; font-weight: 600; color: var(--text-muted); text-transform: uppercase; margin-bottom: 8px; display: block;">Jenis Transaksi</label>
@@ -182,7 +182,6 @@
                     </div>
                 </div>
                 
-                <!-- BAGIAN PRATINJAU DENGAN STRUKTUR KOLOM BARU -->
                 <div id="tab-preview" class="preview-container">
                     <div class="receipt-paper" id="printable-receipt">
                         <div class="receipt-center">
@@ -204,7 +203,6 @@
                         <div class="receipt-row" id="row-out-tujuan-rek"><div class="r-label" id="label-out-tujuan-rek">Rekening</div><div class="r-colon">:</div><div class="r-value" id="out-tujuan-rek">--</div></div>
                         <div class="receipt-row" id="row-out-tujuan-bank"><div class="r-label" id="label-out-tujuan-bank">Bank</div><div class="r-colon">:</div><div class="r-value" id="out-tujuan-bank">--</div></div>
                         
-                        <!-- BLOCK TOKEN MENJADI SERIAL NUMBER -->
                         <div id="block-out-no-pelanggan" style="display: none; text-align: center; margin: 15px 0;">
                             <div style="font-size: 12px; margin-bottom: 5px;">** Serial Number **</div>
                             <div id="out-no-pelanggan" style="font-weight: 700; font-size: 16px; letter-spacing: 1px;">--</div>
@@ -213,7 +211,7 @@
                         <div class="receipt-line"></div>
                         <div class="receipt-row"><div class="r-label">Nominal</div><div class="r-colon">:</div><div class="r-value" id="out-nominal">Rp 0</div></div>
                         <div class="receipt-row"><div class="r-label">Biaya Admin</div><div class="r-colon">:</div><div class="r-value" id="out-admin">Rp 0</div></div>
-                        <div class="receipt-row bold"><div class="r-label">TOTAL</div><div class="r-colon">:</div><div class="r-value" id="out-total">Rp 0</div></div>
+                        <div class="receipt-row bold"><div class="r-label">UNTUNG</div><div class="r-colon">:</div><div class="r-value" id="out-total">Rp 0</div></div>
                         <div class="receipt-line"></div>
                         <div class="receipt-center" style="margin-top: 20px; color: #475569;">
                             <p>Transaksi berhasil</p>
@@ -229,16 +227,34 @@
             </div>
         </div>
 
-        <!-- HALAMAN 2: SCAN DOKUMEN -->
         <div id="page-dokumen" class="page hidden">
             <div class="upload-section">
                 <div class="upload-card">
                     <div class="upload-icon"><i class="fa-solid fa-file-pdf"></i></div>
                     <h2 style="font-size: 16px; font-weight: 700;">Scan Dokumen</h2>
-                    <p style="font-size: 13px; color: var(--text-muted); margin: 5px 0 15px 0;">Ubah foto fisik dokumen menjadi teks / PDF</p>
-                    <input type="file" id="doc-input" accept="image/*" style="display: none;">
+                    <p style="font-size: 13px; color: var(--text-muted); margin: 5px 0 15px 0;">Upload Foto atau File PDF untuk diubah menjadi teks</p>
+                    
+                    <div class="form-group" style="width: 100%; margin-bottom: 15px; text-align: left;">
+                        <label style="margin-bottom: 5px; display: block;">Deteksi Bahasa</label>
+                        <select id="doc-lang">
+                            <option value="eng+ind" selected>Indonesia & Inggris</option>
+                            <option value="ara">Arab (Arabic)</option>
+                            <option value="chi_sim">Mandarin (Simplified)</option>
+                            <option value="jpn">Jepang (Japanese)</option>
+                            <option value="kor">Korea (Korean)</option>
+                            <option value="rus">Rusia (Russian)</option>
+                            <option value="fra">Prancis (French)</option>
+                            <option value="deu">Jerman (German)</option>
+                            <option value="spa">Spanyol (Spanish)</option>
+                        </select>
+                    </div>
+
+                    <input type="file" id="doc-input-kamera" accept="image/*" capture="environment" style="display: none;">
+                    <input type="file" id="doc-input-file" accept="image/*, application/pdf" style="display: none;">
+                    
                     <div class="btn-group">
-                        <button class="btn btn-primary" onclick="document.getElementById('doc-input').click()"><i class="fa-solid fa-camera"></i> Ambil / Pilih Gambar</button>
+                        <button class="btn btn-primary" onclick="document.getElementById('doc-input-kamera').click()"><i class="fa-solid fa-camera"></i> Kamera</button>
+                        <button class="btn btn-secondary" onclick="document.getElementById('doc-input-file').click()"><i class="fa-solid fa-file-arrow-up"></i> File / PDF</button>
                     </div>
                 </div>
                 <div id="doc-result-section" style="display: none; flex-direction: column; gap: 10px;">
@@ -254,7 +270,6 @@
             </div>
         </div>
 
-        <!-- HALAMAN 3: RIWAYAT -->
         <div id="page-riwayat" class="page hidden">
             <div style="padding: 20px;">
                 <h2 style="font-size: 16px; font-weight: 700; margin-bottom: 15px;">Riwayat Transaksi</h2>
@@ -406,8 +421,11 @@
         
         document.getElementById('kamera-input').addEventListener('change', handleImageUpload);
         document.getElementById('galeri-input').addEventListener('change', handleImageUpload);
-        const docInput = document.getElementById('doc-input');
-        if(docInput) { docInput.addEventListener('change', handleDocUpload); }
+        
+        const docInputKamera = document.getElementById('doc-input-kamera');
+        const docInputFile = document.getElementById('doc-input-file');
+        if(docInputKamera) { docInputKamera.addEventListener('change', handleDocUpload); }
+        if(docInputFile) { docInputFile.addEventListener('change', handleDocUpload); }
 
         function handleImageUpload(e) {
             const file = e.target.files[0];
@@ -453,33 +471,76 @@
             img.src = imageSrc;
         }
 
-        function handleDocUpload(e) {
+        // FUNGSI BARU MEMPROSES PDF & GAMBAR DOKUMEN MULTI BAHASA
+        async function handleDocUpload(e) {
             const file = e.target.files[0];
             if (!file) return;
-            const reader = new FileReader();
-            reader.onload = function(event) {
-                processDocOCR(event.target.result);
-            };
-            reader.readAsDataURL(file);
+            
+            const loader = document.getElementById('loader');
+            const loaderTitle = document.getElementById('loader-title');
+            const loaderSub = document.getElementById('loader-sub');
+
+            // Jika file adalah PDF
+            if (file.type === 'application/pdf') {
+                loader.style.display = 'flex';
+                loaderTitle.innerText = "Memproses PDF...";
+                loaderSub.innerText = "Mengubah PDF menjadi gambar...";
+                
+                try {
+                    const fileReader = new FileReader();
+                    fileReader.onload = async function() {
+                        const typedarray = new Uint8Array(this.result);
+                        pdfjsLib.GlobalWorkerOptions.workerSrc = 'https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.worker.min.js';
+                        
+                        const pdf = await pdfjsLib.getDocument(typedarray).promise;
+                        const page = await pdf.getPage(1); // Merender halaman 1 saja
+                        const viewport = page.getViewport({ scale: 2.0 });
+                        
+                        const canvas = document.createElement('canvas');
+                        const ctx = canvas.getContext('2d');
+                        canvas.height = viewport.height;
+                        canvas.width = viewport.width;
+                        
+                        await page.render({ canvasContext: ctx, viewport: viewport }).promise;
+                        processDocOCR(canvas.toDataURL('image/png'));
+                    };
+                    fileReader.readAsArrayBuffer(file);
+                } catch (err) {
+                    loader.style.display = 'none';
+                    showToast('Gagal membaca file PDF.', 'error');
+                }
+            } else {
+                // Jika file gambar standar (Kamera / Galeri)
+                const reader = new FileReader();
+                reader.onload = function(event) {
+                    processDocOCR(event.target.result);
+                };
+                reader.readAsDataURL(file);
+            }
             e.target.value = '';
         }
 
         function processDocOCR(imageSrc) {
             const loader = document.getElementById('loader');
+            const langSel = document.getElementById('doc-lang');
+            const selectedLang = langSel.value;
+            const langLabel = langSel.options[langSel.selectedIndex].text;
+            
             loader.style.display = 'flex';
             document.getElementById('loader-title').innerText = "Membaca Dokumen...";
-            document.getElementById('loader-sub').innerText = "AI sedang mengekstrak teks...";
-            Tesseract.recognize(imageSrc, 'ind', { logger: m => console.log(m) })
+            document.getElementById('loader-sub').innerText = "AI sedang mengekstrak teks (" + langLabel + ")...";
+            
+            Tesseract.recognize(imageSrc, selectedLang, { logger: m => console.log(m) })
             .then(({ data: { text } }) => {
                 loader.style.display = 'none';
                 document.getElementById('doc-result-section').style.display = 'flex';
                 document.getElementById('doc-text').value = text;
                 showToast('Teks dokumen berhasil diekstrak!', 'success');
-                document.getElementById('loader-title').innerText = "Memproses Gambar...";
-                document.getElementById('loader-sub').innerText = "AI sedang membaca teks pada struk";
             }).catch(err => {
                 loader.style.display = 'none';
                 showToast('Gagal membaca dokumen.', 'error');
+            }).finally(() => {
+                // Reset loader state back to scan struk default just in case
                 document.getElementById('loader-title').innerText = "Memproses Gambar...";
                 document.getElementById('loader-sub').innerText = "AI sedang membaca teks pada struk";
             });
@@ -773,13 +834,9 @@
 
         const PAPER_WIDTH = 32;
         
-        // FUNGSI BARU UNTUK SEJAJARAN SAAT PRINT BLUETOOTH
         function padLabelValue(label, value, width = PAPER_WIDTH) {
             label = String(label || '');
             value = String(value || '-');
-            
-            // Format yang dirapikan dengan titik dua (:) sejajar
-            // Padding ke-14 agar teks rata
             let paddedLabel = label.padEnd(14, ' ');
             return paddedLabel + ': ' + value;
         }
@@ -815,7 +872,6 @@
                 t += line + "\n";
                 const noPelangganFormatted = formatNoPelangganTampil(get('in-no-pelanggan'));
                 t += "\x1B\x61\x01";
-                // DIUBAH MENJADI SERIAL NUMBER
                 t += "** Serial Number **\n";
                 t += "\x1B\x45\x01";
                 if (noPelangganFormatted.length <= 16) { t += "\x1B\x21\x10"; t += noPelangganFormatted + "\n"; t += "\x1B\x21\x00"; }
@@ -849,7 +905,7 @@
             t += padLabelValue('Nominal', 'Rp ' + nominal) + "\n";
             t += padLabelValue('Admin', 'Rp ' + admin) + "\n";
             t += "\x1B\x45\x01";
-            t += padLabelValue('TOTAL', 'Rp ' + total) + "\n";
+            t += padLabelValue('UNTUNG', 'Rp ' + total) + "\n";
             t += "\x1B\x45\x00";
             t += line + "\n";
 
