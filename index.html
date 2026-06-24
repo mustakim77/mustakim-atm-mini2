@@ -10,7 +10,6 @@
     <script src="https://cdn.jsdelivr.net/npm/tesseract.js@4/dist/tesseract.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/html2canvas@1.4.1/dist/html2canvas.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
-    
     <script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.min.js"></script>
     
     <style>
@@ -211,7 +210,7 @@
                         <div class="receipt-line"></div>
                         <div class="receipt-row"><div class="r-label">Nominal</div><div class="r-colon">:</div><div class="r-value" id="out-nominal">Rp 0</div></div>
                         <div class="receipt-row"><div class="r-label">Biaya Admin</div><div class="r-colon">:</div><div class="r-value" id="out-admin">Rp 0</div></div>
-                        <div class="receipt-row bold"><div class="r-label">UNTUNG</div><div class="r-colon">:</div><div class="r-value" id="out-total">Rp 0</div></div>
+                        <div class="receipt-row bold"><div class="r-label">TOTAL</div><div class="r-colon">:</div><div class="r-value" id="out-total">Rp 0</div></div>
                         <div class="receipt-line"></div>
                         <div class="receipt-center" style="margin-top: 20px; color: #475569;">
                             <p>Transaksi berhasil</p>
@@ -471,7 +470,6 @@
             img.src = imageSrc;
         }
 
-        // FUNGSI BARU MEMPROSES PDF & GAMBAR DOKUMEN MULTI BAHASA
         async function handleDocUpload(e) {
             const file = e.target.files[0];
             if (!file) return;
@@ -480,7 +478,6 @@
             const loaderTitle = document.getElementById('loader-title');
             const loaderSub = document.getElementById('loader-sub');
 
-            // Jika file adalah PDF
             if (file.type === 'application/pdf') {
                 loader.style.display = 'flex';
                 loaderTitle.innerText = "Memproses PDF...";
@@ -493,7 +490,7 @@
                         pdfjsLib.GlobalWorkerOptions.workerSrc = 'https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.worker.min.js';
                         
                         const pdf = await pdfjsLib.getDocument(typedarray).promise;
-                        const page = await pdf.getPage(1); // Merender halaman 1 saja
+                        const page = await pdf.getPage(1); 
                         const viewport = page.getViewport({ scale: 2.0 });
                         
                         const canvas = document.createElement('canvas');
@@ -510,7 +507,6 @@
                     showToast('Gagal membaca file PDF.', 'error');
                 }
             } else {
-                // Jika file gambar standar (Kamera / Galeri)
                 const reader = new FileReader();
                 reader.onload = function(event) {
                     processDocOCR(event.target.result);
@@ -540,7 +536,6 @@
                 loader.style.display = 'none';
                 showToast('Gagal membaca dokumen.', 'error');
             }).finally(() => {
-                // Reset loader state back to scan struk default just in case
                 document.getElementById('loader-title').innerText = "Memproses Gambar...";
                 document.getElementById('loader-sub').innerText = "AI sedang membaca teks pada struk";
             });
@@ -585,25 +580,12 @@
             return '';
         }
 
-        function detectDayaPLN(lines) {
-            for (let i = 0; i < lines.length; i++) {
-                let line = lines[i];
-                let lLower = line.toLowerCase();
-                if (/kwh|pemakaian|usage|tarif/i.test(lLower)) {
-                    let m = line.match(/(\d{1,5}([.,]\d{1,2})?)/);
-                    if (m) {
-                        let val = parseFloat(m[1].replace(',', '.'));
-                        if (val >= 0.1 && val <= 10000) return m[1];
-                    }
-                }
-            }
-            for (let i = 0; i < lines.length; i++) {
-                let m2 = lines[i].match(/\b\d{1,4}([.,]\d{1,2})\b/);
-                if (m2) {
-                    let val = parseFloat(m2[0].replace(',', '.'));
-                    if (val > 0 && val <= 10000) return m2[0];
-                }
-            }
+        // FUNGSI BARU YANG JAUH LEBIH AKURAT UNTUK KWH
+        function detectKWH(dataText) {
+            let m = dataText.match(/(?:jml\s*kwh|jumlah\s*kwh|kwh)\s*[:\-\s]*(\d+([.,]\d+)?)/i);
+            if (m) return m[1];
+            let m2 = dataText.match(/(\d+([.,]\d+)?)\s*kwh/i);
+            if (m2) return m2[1];
             return '';
         }
 
@@ -620,7 +602,8 @@
                 let gabunganMatch = dataText.match(/(?:Token Listrik|PLN)[^\d]*\d+[a-zA-Z]*\s+(\d{11,12})\s+([A-Za-z\s]+)/i);
                 if (gabunganMatch) {
                     pId = gabunganMatch[1];
-                    pNama = gabunganMatch[2].trim().replace(/\s+/g, '');
+                    // Modifikasi agar spasi dipertahankan
+                    pNama = gabunganMatch[2].trim().replace(/\s+/g, ' ');
                 }
 
                 for (let i = 0; i < lines.length; i++) {
@@ -641,12 +624,12 @@
                         if (spaced) pNama = spaced[0].replace(/\s+/g, '');
                         if (!pNama) {
                             let m = line.match(/\b\d{11,12}\s+([A-Za-z\s]{3,})/);
-                            if (m) pNama = m[1].replace(/\s+/g, '');
+                            if (m) pNama = m[1].replace(/\s+/g, ' ').trim();
                         }
                         if (!pNama && (lLower.includes('nama'))) {
                             let n = line.replace(/^(nama\s*pelanggan|nama\s*pel|nama)[:\s\-]*/i, '').trim();
                             if (!n && i + 1 < lines.length) n = lines[i + 1].trim();
-                            if (n) pNama = n.replace(/\s+/g, '');
+                            if (n) pNama = n.replace(/\s+/g, ' ').trim();
                         }
                     }
 
@@ -667,7 +650,8 @@
                     }
                 }
 
-                pDaya = detectDayaPLN(lines);
+                pDaya = detectKWH(dataText); // MENGGUNAKAN FUNGSI DETEKSI BARU
+                
                 let nomMatch = dataText.match(/(?:rp|total|bayar|nominal|stroom)[^\d]*(\d{2,3}[\.\,]\d{3}(?:[\.\,]\d{3})?)/i) ||
                                dataText.match(/Rp\s*([\d\.\,]+)/i);
                 if (nomMatch) pNominal = nomMatch[1].replace(/[\.\,]/g, '');
@@ -905,7 +889,8 @@
             t += padLabelValue('Nominal', 'Rp ' + nominal) + "\n";
             t += padLabelValue('Admin', 'Rp ' + admin) + "\n";
             t += "\x1B\x45\x01";
-            t += padLabelValue('UNTUNG', 'Rp ' + total) + "\n";
+            // Perubahan label cetak menjadi TOTAL
+            t += padLabelValue('TOTAL', 'Rp ' + total) + "\n";
             t += "\x1B\x45\x00";
             t += line + "\n";
 
@@ -1045,10 +1030,14 @@
                     const card = document.createElement('div');
                     card.className = 'riwayat-card';
                     const jenisLabel = (KONFIGURASI_JENIS[trx.jenis] || KONFIGURASI_JENIS.transfer).judulStruk;
+                    
+                    // Modifikasi agar riwayat juga menampilkan tulisan Total, bukan Untung
+                    const totalHitung = (parseInt(trx.nominal) || 0) + (parseInt(trx.admin) || 0);
+
                     card.innerHTML = `
                         <div class="riwayat-card-top">
                             <div>
-                                <span class="riwayat-nominal">Untung: Rp ${formatRibuan(trx.admin)}</span>
+                                <span class="riwayat-nominal">Total: Rp ${formatRibuan(totalHitung)}</span>
                                 <div style="font-size:10px; color:var(--primary); font-weight:600; text-transform:uppercase; margin-top:2px;">${jenisLabel}</div>
                             </div>
                             <span class="riwayat-tanggal">${trx.tanggal || '-'}</span>
