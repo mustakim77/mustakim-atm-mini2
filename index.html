@@ -3,8 +3,8 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title> Cetak Struk MP </title>
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Space+Mono&display=swap" rel="stylesheet">
+    <title>Mustakim Phone - Mini ATM & PPOB</title>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=Space+Mono:wght@700&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
     
     <script src="https://cdn.jsdelivr.net/npm/tesseract.js@4/dist/tesseract.min.js"></script>
@@ -13,450 +13,570 @@
     <script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.min.js"></script>
     
     <style>
-        :root { --bg-body: #f1f5f9; --bg-app: #ffffff; --text-main: #0f172a; --text-muted: #64748b; --primary: #3b82f6; --primary-hover: #2563eb; --border-color: #e2e8f0; --card-bg: #f8fafc; }
+        :root { 
+            --primary: #0284c7; 
+            --primary-light: #0ea5e9;
+            --bg-body: #f1f5f9; 
+            --bg-app: #f8fafc; 
+            --text-main: #1e293b; 
+            --text-muted: #64748b; 
+            --border-color: #e2e8f0; 
+        }
         * { box-sizing: border-box; margin: 0; padding: 0; font-family: 'Inter', sans-serif; -webkit-tap-highlight-color: transparent; }
         body { background-color: var(--bg-body); display: flex; justify-content: center; min-height: 100vh; color: var(--text-main); }
-        .app-container { background-color: var(--bg-app); width: 100%; max-width: 480px; min-height: 100vh; position: relative; display: flex; flex-direction: column; box-shadow: 0 0 20px rgba(0,0,0,0.05); overflow-x: hidden; }
-        .header { display: flex; justify-content: space-between; align-items: center; padding: 15px 20px; border-bottom: 1px solid var(--border-color); background: var(--bg-app); position: sticky; top: 0; z-index: 10; }
-        .brand-info { display: flex; align-items: center; gap: 12px; }
-        .logo-box { background: #e0e7ff; color: var(--primary); width: 36px; height: 36px; border-radius: 10px; display: flex; align-items: center; justify-content: center; font-size: 18px; }
-        .brand-text h1 { font-size: 14px; font-weight: 700; line-height: 1.2; text-transform: uppercase; }
-        .brand-text p { font-size: 11px; color: var(--text-muted); }
-        .header-actions { display: flex; gap: 10px; align-items: center; }
-        .btn-icon { background: none; border: none; font-size: 18px; color: var(--text-muted); cursor: pointer; padding: 5px; }
-        .btn-printer { background: #eff6ff; border: 1px solid #bfdbfe; color: var(--primary); font-size: 12px; font-weight: 600; padding: 8px 12px; border-radius: 20px; display: flex; align-items: center; gap: 6px; cursor: pointer; transition: 0.2s;}
-        .btn-printer:active { background: #dbeafe; }
-        .btn-printer.connected { background: #ecfdf5; border-color: #a7f3d0; color: #059669; }
-        .btn-printer:disabled { opacity: 0.6; cursor: not-allowed; }
-        .page { flex: 1; overflow-y: auto; padding-bottom: 80px; display: flex; flex-direction: column; }
-        .page.hidden { display: none; }
-        .chip-jenis { flex-shrink: 0; display: flex; align-items: center; gap: 6px; padding: 9px 14px; border-radius: 20px; border: 1px solid var(--border-color); background: white; color: var(--text-muted); font-size: 12px; font-weight: 600; cursor: pointer; white-space: nowrap; transition: 0.2s; }
-        .chip-jenis.active { background: var(--primary); border-color: var(--primary); color: white; }
-        .upload-section { padding: 20px; display: flex; flex-direction: column; }
-        .upload-card { border: 2px dashed #cbd5e1; border-radius: 16px; padding: 30px 20px; text-align: center; background: var(--card-bg); display: flex; flex-direction: column; align-items: center; gap: 15px; margin-bottom: 20px; }
-        .upload-icon { width: 50px; height: 50px; background: #e0e7ff; color: var(--primary); border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 24px; margin-bottom: 5px; }
-        .btn-group { display: flex; gap: 10px; width: 100%; }
-        .btn { flex: 1; padding: 12px; border-radius: 10px; font-size: 14px; font-weight: 600; display: flex; align-items: center; justify-content: center; gap: 8px; cursor: pointer; border: none; transition: 0.2s; }
-        .btn-primary { background: var(--primary); color: white; }
-        .btn-secondary { background: white; border: 1px solid var(--border-color); color: var(--text-main); }
-        .btn:disabled { opacity: 0.6; cursor: not-allowed; }
-        #result-section { display: none; flex-direction: column; flex: 1; }
-        .tabs { display: flex; background: var(--bg-body); padding: 5px; margin: 0 20px 15px 20px; border-radius: 10px; }
-        .tab-btn { flex: 1; padding: 10px; text-align: center; border-radius: 8px; font-size: 13px; font-weight: 600; color: var(--text-muted); cursor: pointer; transition: 0.3s; }
-        .tab-btn.active { background: white; color: var(--primary); box-shadow: 0 2px 5px rgba(0,0,0,0.05); }
-        .edit-form { padding: 0 20px; display: flex; flex-direction: column; gap: 12px; }
-        .form-group { display: flex; flex-direction: column; gap: 5px; }
-        .form-group label { font-size: 11px; font-weight: 600; color: var(--text-muted); text-transform: uppercase; }
-        .form-group input, .form-group textarea, .form-group select { padding: 10px 12px; border: 1px solid var(--border-color); border-radius: 8px; font-size: 14px; color: var(--text-main); background: #fff; font-family: 'Inter', sans-serif;}
-        .form-group input:focus, .form-group textarea:focus, .form-group select:focus { outline: none; border-color: var(--primary); }
-        .form-group textarea { font-family: 'Space Mono', monospace; resize: vertical; }
+        .app-container { background-color: var(--bg-app); width: 100%; max-width: 480px; min-height: 100vh; position: relative; display: flex; flex-direction: column; box-shadow: 0 0 20px rgba(0,0,0,0.05); overflow-x: hidden; padding-bottom: 70px;}
         
-        .preview-container { padding: 0 20px 20px 20px; display: none; flex-direction: column; align-items: center; }
-        .receipt-paper { background: white; width: 100%; max-width: 280px; padding: 20px 12px; box-shadow: 0 5px 15px rgba(0, 0, 0, 0.08); font-family: 'Space Mono', monospace; font-size: 11px; color: #000; border-radius: 4px; border: 1px solid #e2e8f0; }
-        .receipt-center { text-align: center; margin-bottom: 10px; }
-        .receipt-center h3 { font-size: 13px; font-weight: bold; margin-bottom: 2px; letter-spacing: 0.3px; }
-        .receipt-center p { font-size: 11px; }
-        .receipt-line { border-top: 1px dashed #94a3b8; margin: 8px 0; }
-        
-        .receipt-row { display: flex; margin-bottom: 5px; font-size: 11px; }
-        .receipt-row.bold { font-weight: bold; font-size: 12px; margin-top: 8px; }
-        .r-label { width: 95px; flex-shrink: 0; }
-        .r-colon { width: 10px; text-align: center; flex-shrink: 0; }
-        .r-value { flex-grow: 1; text-align: left; word-break: break-word; }
+        /* HEADER BARU */
+        .header-curve {
+            background-color: var(--primary);
+            border-bottom-left-radius: 35px;
+            border-bottom-right-radius: 35px;
+            padding: 30px 25px 65px 25px;
+            color: white;
+            display: flex;
+            justify-content: space-between;
+            align-items: flex-start;
+            position: relative;
+        }
+        .header-text h1 { font-size: 22px; font-weight: 800; letter-spacing: -0.5px; line-height: 1.2; }
+        .header-text p { font-size: 13px; font-weight: 500; opacity: 0.9; margin-top: 2px;}
+        .wallet-icon {
+            background: rgba(255,255,255,0.2);
+            width: 42px; height: 42px;
+            border-radius: 12px;
+            display: flex; justify-content: center; align-items: center;
+            font-size: 18px; color: white;
+            cursor: pointer;
+        }
 
-        .loader-overlay { position: absolute; top: 0; left: 0; width: 100%; height: 100%; background: rgba(255,255,255,0.9); z-index: 50; display: none; flex-direction: column; align-items: center; justify-content: center; text-align: center;}
-        .spinner { border: 4px solid #f3f3f3; border-top: 4px solid var(--primary); border-radius: 50%; width: 40px; height: 40px; animation: spin 1s linear infinite; margin-bottom: 15px; }
-        @keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
-        .toast { position: fixed; bottom: 90px; left: 50%; transform: translateX(-50%) translateY(20px); background: #0f172a; color: white; padding: 12px 18px; border-radius: 10px; font-size: 13px; z-index: 100; opacity: 0; transition: 0.3s; max-width: 90%; text-align: center; pointer-events: none; box-shadow: 0 4px 15px rgba(0,0,0,0.2);}
-        .toast.show { opacity: 1; transform: translateX(-50%) translateY(0); }
-        .toast.error { background: #dc2626; }
-        .toast.success { background: #059669; }
-        .riwayat-card { background: var(--card-bg); border: 1px solid var(--border-color); border-radius: 12px; padding: 14px; margin-bottom: 10px;}
-        .riwayat-card-top { display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 8px; }
-        .riwayat-nominal { font-weight: 700; font-size: 15px; color: var(--primary); }
-        .riwayat-tanggal { font-size: 11px; color: var(--text-muted); }
-        .riwayat-detail { font-size: 12px; color: var(--text-main); line-height: 1.5; }
-        .riwayat-detail b { color: var(--text-muted); font-weight: 600; }
-        .bottom-nav { position: absolute; bottom: 0; width: 100%; background: var(--bg-app); border-top: 1px solid var(--border-color); display: flex; justify-content: space-around; padding: 10px 0; z-index: 20; padding-bottom: env(safe-area-inset-bottom, 10px); }
-        .nav-item { display: flex; flex-direction: column; align-items: center; gap: 4px; color: var(--text-muted); font-size: 11px; font-weight: 500; cursor: pointer; flex: 1; }
+        /* NAVIGATION TABS MENGAMBANG */
+        .trx-tabs-wrapper { margin-top: -45px; padding: 0 20px; position: relative; z-index: 10; }
+        .trx-tabs {
+            display: flex; gap: 12px; overflow-x: auto; padding-bottom: 5px;
+            scrollbar-width: none;
+        }
+        .trx-tabs::-webkit-scrollbar { display: none; }
+        .trx-tab {
+            background: white; border: 1px solid var(--border-color);
+            border-radius: 14px; padding: 15px 10px; flex: 1; min-width: 105px;
+            display: flex; flex-direction: column; align-items: center; gap: 8px;
+            font-size: 13px; font-weight: 600; color: var(--text-muted);
+            box-shadow: 0 4px 6px rgba(0,0,0,0.02); cursor: pointer; transition: 0.2s;
+        }
+        .trx-tab i { font-size: 22px; }
+        .trx-tab.active {
+            background: var(--primary); border-color: var(--primary); color: white;
+            box-shadow: 0 6px 12px rgba(2, 132, 199, 0.3);
+        }
+
+        /* UPLOAD BOX DASHED */
+        .scan-box-wrapper { padding: 25px 20px 10px 20px; }
+        .scan-box {
+            border: 2px dashed #7dd3fc; background: #f0f9ff;
+            border-radius: 16px; padding: 25px 20px; text-align: center;
+            color: var(--primary); cursor: pointer; transition: 0.2s;
+            display: flex; flex-direction: column; align-items: center; gap: 10px;
+        }
+        .scan-box:active { background: #e0f2fe; }
+        .scan-box i.fa-expand { font-size: 32px; color: var(--primary-light); }
+        .scan-box h3 { font-size: 16px; font-weight: 700; color: #0369a1; }
+        .scan-box p { font-size: 12px; color: #38bdf8; font-weight: 500; }
+        
+        #btn-raw-ocr { background: none; border: none; font-size: 11px; color: var(--text-muted); margin: 5px auto 0 auto; display: none; cursor: pointer; text-decoration: underline;}
+
+        /* FORM CARD */
+        .form-card {
+            background: white; border-radius: 16px; padding: 20px; margin: 10px 20px 20px 20px;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.03); border: 1px solid var(--border-color);
+            display: flex; flex-direction: column; gap: 16px;
+        }
+        .form-group { display: flex; flex-direction: column; gap: 6px; }
+        .form-group label { font-size: 11.5px; font-weight: 700; color: #64748b; }
+        
+        .input-wrapper {
+            display: flex; align-items: center; border: 1px solid var(--border-color);
+            border-radius: 10px; background: #f8fafc; overflow: hidden; transition: 0.2s;
+        }
+        .input-wrapper:focus-within { border-color: var(--primary-light); box-shadow: 0 0 0 2px #e0f2fe; background: white;}
+        .input-wrapper i { width: 45px; text-align: center; color: #94a3b8; font-size: 16px; }
+        .input-wrapper input, .input-wrapper select {
+            flex: 1; border: none; background: transparent; padding: 14px 14px 14px 0;
+            font-size: 14px; color: var(--text-main); font-weight: 500; outline: none; width: 100%;
+        }
+        .input-wrapper input::placeholder { color: #cbd5e1; font-weight: 400; }
+        
+        .row-flex { display: flex; gap: 12px; }
+        .row-flex > div { flex: 1; min-width: 0; }
+        
+        .input-token input { font-family: 'Space Mono', monospace; font-weight: 700; font-size: 15px; letter-spacing: 1.5px; color: #475569;}
+        .rp-text { font-weight: 700; color: #94a3b8; width: 45px; text-align: center; font-size: 14px;}
+
+        /* BUTTON SUBMIT */
+        .btn-submit {
+            background: var(--primary); color: white; border: none; border-radius: 12px;
+            padding: 16px; font-size: 15px; font-weight: 700; cursor: pointer;
+            display: flex; justify-content: center; align-items: center; gap: 10px;
+            box-shadow: 0 6px 15px rgba(2, 132, 199, 0.25); transition: 0.2s; margin-top: 5px;
+        }
+        .btn-submit:active { transform: scale(0.98); background: #0369a1; }
+
+        /* MODAL STRUK */
+        .modal-overlay {
+            position: fixed; top: 0; left: 0; width: 100%; height: 100%;
+            background: rgba(15, 23, 42, 0.7); z-index: 200; display: none;
+            justify-content: center; align-items: flex-end; backdrop-filter: blur(3px);
+        }
+        .modal-content {
+            background: var(--bg-body); width: 100%; max-width: 480px;
+            border-top-left-radius: 24px; border-top-right-radius: 24px;
+            padding: 25px 20px 30px 20px; display: flex; flex-direction: column; align-items: center;
+            max-height: 90vh; overflow-y: auto; animation: slideUp 0.3s ease-out;
+        }
+        @keyframes slideUp { from { transform: translateY(100%); } to { transform: translateY(0); } }
+        
+        .modal-header { width: 100%; display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px; }
+        .modal-header h2 { font-size: 18px; font-weight: 700; color: var(--text-main); }
+        .btn-close { background: #e2e8f0; border: none; width: 32px; height: 32px; border-radius: 50%; display: flex; justify-content: center; align-items: center; color: var(--text-muted); cursor: pointer; }
+
+        /* RECEIPT PAPER */
+        .receipt-paper { background: white; width: 100%; max-width: 300px; padding: 25px 15px; box-shadow: 0 10px 25px rgba(0, 0, 0, 0.1); font-family: 'Space Mono', monospace; font-size: 11px; color: #000; border-radius: 4px; border: 1px solid #e2e8f0; margin-bottom: 20px;}
+        .receipt-center { text-align: center; margin-bottom: 12px; }
+        .receipt-center h3 { font-size: 14px; font-weight: bold; margin-bottom: 4px; letter-spacing: 0.5px; }
+        .receipt-center p { font-size: 11px; }
+        .receipt-line { border-top: 1px dashed #94a3b8; margin: 10px 0; }
+        .receipt-row { display: flex; margin-bottom: 6px; font-size: 11px; }
+        .receipt-row.bold { font-weight: bold; font-size: 12px; margin-top: 10px; }
+        .r-label { width: 105px; flex-shrink: 0; }
+        .r-colon { width: 12px; text-align: center; flex-shrink: 0; }
+        .r-value { flex-grow: 1; text-align: left; word-break: break-word; }
+        #block-out-no-pelanggan { display: none; text-align: center; margin: 18px 0; }
+        #out-no-pelanggan { font-weight: 700; font-size: 18px; letter-spacing: 1px; }
+
+        .modal-actions { display: flex; gap: 12px; width: 100%; max-width: 300px; flex-direction: column;}
+        .btn-action { padding: 14px; border-radius: 12px; font-weight: 700; border: none; cursor: pointer; display: flex; align-items: center; justify-content: center; gap: 8px; font-size: 14px; transition: 0.2s;}
+        .btn-action.primary { background: var(--primary); color: white; }
+        .btn-action.whatsapp { background: #25D366; color: white; }
+        .btn-action.outline { background: white; border: 1px solid var(--border-color); color: var(--text-main); }
+
+        /* BOTTOM NAV */
+        .bottom-nav { position: fixed; bottom: 0; width: 100%; max-width: 480px; background: white; border-top: 1px solid var(--border-color); display: flex; justify-content: space-around; padding: 12px 0; z-index: 50; padding-bottom: env(safe-area-inset-bottom, 12px); box-shadow: 0 -2px 10px rgba(0,0,0,0.02);}
+        .nav-item { display: flex; flex-direction: column; align-items: center; gap: 5px; color: #94a3b8; font-size: 11px; font-weight: 600; cursor: pointer; flex: 1; transition: 0.2s;}
         .nav-item i { font-size: 20px; }
         .nav-item.active { color: var(--primary); }
+
+        /* LOADER & TOAST */
+        .loader-overlay { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(255,255,255,0.9); z-index: 300; display: none; flex-direction: column; align-items: center; justify-content: center; text-align: center; backdrop-filter: blur(2px);}
+        .spinner { border: 4px solid #f0f9ff; border-top: 4px solid var(--primary); border-radius: 50%; width: 45px; height: 45px; animation: spin 1s linear infinite; margin-bottom: 15px; }
+        @keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
+        .toast { position: fixed; bottom: 100px; left: 50%; transform: translateX(-50%) translateY(20px); background: #1e293b; color: white; padding: 14px 20px; border-radius: 30px; font-size: 13px; font-weight: 500; z-index: 400; opacity: 0; transition: 0.3s; max-width: 90%; text-align: center; pointer-events: none; box-shadow: 0 4px 15px rgba(0,0,0,0.15);}
+        .toast.show { opacity: 1; transform: translateX(-50%) translateY(0); }
+        .toast.error { background: #ef4444; }
+        .toast.success { background: #10b981; }
+        
+        .page { display: none; flex-direction: column; }
+        .page.active { display: flex; }
+
+        .riwayat-card { background: white; border: 1px solid var(--border-color); border-radius: 12px; padding: 16px; margin-bottom: 12px; box-shadow: 0 2px 5px rgba(0,0,0,0.02);}
     </style>
 </head>
 <body>
     <div class="app-container">
+        
         <div class="loader-overlay" id="loader">
             <div class="spinner"></div>
-            <h3 id="loader-title" style="font-size: 16px; color: var(--text-main);">Memproses Gambar...</h3>
-            <p id="loader-sub" style="font-size: 12px; color: var(--text-muted); margin-top: 5px;">AI sedang membaca teks</p>
+            <h3 id="loader-title" style="font-size: 16px; color: var(--text-main); font-weight: 700;">Memproses...</h3>
+            <p id="loader-sub" style="font-size: 13px; color: var(--text-muted); margin-top: 5px;">AI sedang bekerja</p>
         </div>
         <div class="toast" id="toast"></div>
-        <div id="raw-ocr-modal" style="display:none; position:fixed; inset:0; background:rgba(15,23,42,0.6); z-index:200; align-items:center; justify-content:center; padding:20px;">
-            <div style="background:white; border-radius:14px; max-width:420px; width:100%; max-height:80vh; display:flex; flex-direction:column; overflow:hidden;">
-                <div style="padding:15px 18px; border-bottom:1px solid var(--border-color); display:flex; justify-content:space-between; align-items:center;">
-                    <strong style="font-size:14px;">Teks Mentah Hasil OCR</strong>
-                    <button onclick="document.getElementById('raw-ocr-modal').style.display='none'" style="border:none; background:none; font-size:18px; cursor:pointer; color:var(--text-muted);">&times;</button>
-                </div>
-                <textarea id="raw-ocr-text" readonly style="flex:1; padding:15px; border:none; font-family:'Space Mono',monospace; font-size:12px; resize:none; min-height:200px;"></textarea>
-                <div style="padding:12px 18px; border-top:1px solid var(--border-color);">
-                    <button class="btn btn-primary" style="width:100%;" onclick="copyRawOcrText()"><i class="fa-solid fa-copy"></i> Salin Teks</button>
-                </div>
+
+        <!-- HEADER BERANDA -->
+        <header class="header-curve">
+            <div class="header-text">
+                <h1>Mustakim Cell</h1>
+                <p>Mini ATM & PPOB</p>
             </div>
-        </div>
-        <header class="header">
-            <div class="brand-info">
-                <div class="logo-box"><i class="fa-solid fa-receipt"></i></div>
-                <div class="brand-text">
-                    <h1>MUSTAKIM MINI ATM</h1>
-                    <p>Cetak Struk Konter</p>
-                </div>
-            </div>
-            <div class="header-actions">
-                <button class="btn-printer" id="btn-printer" onclick="printReceiptBluetooth()"><i class="fa-brands fa-bluetooth"></i> <span id="printer-label">Printer</span></button>
-                <button class="btn-icon"><i class="fa-solid fa-gear"></i></button>
+            <div class="wallet-icon" onclick="connectToPrinterWrapper()">
+                <i class="fa-solid fa-print" id="hdr-printer-icon"></i>
             </div>
         </header>
 
-        <div id="page-scan" class="page">
-            <div class="upload-section" style="padding-bottom: 0;">
-                <label style="font-size: 11px; font-weight: 600; color: var(--text-muted); text-transform: uppercase; margin-bottom: 8px; display: block;">Jenis Transaksi</label>
-                <div id="jenis-transaksi-group" style="display: flex; gap: 8px; overflow-x: auto; padding-bottom: 4px; margin-bottom: 5px;">
-                    <button type="button" class="chip-jenis active" data-jenis="transfer" onclick="pilihJenisTransaksi('transfer', this)"><i class="fa-solid fa-money-bill-transfer"></i> Transfer Bank</button>
-                    <button type="button" class="chip-jenis" data-jenis="ewallet" onclick="pilihJenisTransaksi('ewallet', this)"><i class="fa-solid fa-wallet"></i> Topup E-Wallet</button>
-                    <button type="button" class="chip-jenis" data-jenis="listrik" onclick="pilihJenisTransaksi('listrik', this)"><i class="fa-solid fa-bolt"></i> Token PLN</button>
-                    <button type="button" class="chip-jenis" data-jenis="tagihan" onclick="pilihJenisTransaksi('tagihan', this)"><i class="fa-solid fa-file-invoice"></i> Bayar Tagihan</button>
+        <!-- HALAMAN 1: BERANDA (FORM & SCAN) -->
+        <div id="page-beranda" class="page active">
+            
+            <div class="trx-tabs-wrapper">
+                <div class="trx-tabs">
+                    <div class="trx-tab active" data-jenis="listrik" onclick="pilihJenisTransaksi('listrik', this)">
+                        <i class="fa-solid fa-bolt"></i> Token PLN
+                    </div>
+                    <div class="trx-tab" data-jenis="transfer" onclick="pilihJenisTransaksi('transfer', this)">
+                        <i class="fa-solid fa-money-bill-transfer"></i> Transfer
+                    </div>
+                    <div class="trx-tab" data-jenis="ewallet" onclick="pilihJenisTransaksi('ewallet', this)">
+                        <i class="fa-solid fa-mobile-screen"></i> E-Wallet
+                    </div>
+                    <div class="trx-tab" data-jenis="tagihan" onclick="pilihJenisTransaksi('tagihan', this)">
+                        <i class="fa-solid fa-file-invoice"></i> Tagihan
+                    </div>
                 </div>
             </div>
-            <div class="upload-section">
-                <div class="upload-card">
-                    <img id="image-preview" style="display: none; width: 100%; max-height: 200px; object-fit: contain; border-radius: 12px; margin-bottom: 15px; border: 1px solid var(--border-color);" alt="Preview Struk" />
-                    <div id="upload-placeholder">
-                        <div class="upload-icon"><i class="fa-regular fa-image"></i></div>
-                        <h2 style="font-size: 16px; font-weight: 700;">Upload Bukti Transfer</h2>
-                        <p style="font-size: 13px; color: var(--text-muted); margin: 5px 0 15px 0;">Foto screenshot bukti transfer (BRImo, BCA, Mandiri, dll)</p>
-                    </div>
-                    <input type="file" id="kamera-input" accept="image/*" capture="environment" style="display: none;">
-                    <input type="file" id="galeri-input" accept="image/*" style="display: none;">
-                    <div class="btn-group">
-                        <button class="btn btn-primary" onclick="document.getElementById('kamera-input').click()"><i class="fa-solid fa-camera"></i> Kamera</button>
-                        <button class="btn btn-secondary" onclick="document.getElementById('galeri-input').click()"><i class="fa-solid fa-upload"></i> Galeri</button>
-                    </div>
-                    <button id="btn-raw-ocr" class="btn btn-secondary" style="display: none; margin-top: 10px; font-size: 11px; padding: 8px;" onclick="showRawOcrModal()"><i class="fa-solid fa-bug"></i> Lihat Teks Mentah Hasil OCR</button>
-                </div>
+
+            <div class="scan-box-wrapper">
+                <input type="file" id="main-file-input" accept="image/*" style="display: none;">
+                <label for="main-file-input" class="scan-box">
+                    <i class="fa-solid fa-expand"></i>
+                    <h3 id="lbl-scan-title">Scan Bukti Transaksi</h3>
+                    <p id="lbl-scan-sub">Upload screenshot dari Shopee, DANA, BRImo dll</p>
+                </label>
+                <button id="btn-raw-ocr" onclick="showRawOcrModal()">Lihat Teks Mentah OCR</button>
             </div>
-            <div id="result-section">
-                <div class="tabs">
-                    <div class="tab-btn active" onclick="switchTab('edit', this)"><i class="fa-solid fa-pen"></i> Edit Data</div>
-                    <div class="tab-btn" onclick="switchTab('preview', this)"><i class="fa-solid fa-eye"></i> Pratinjau Struk</div>
+
+            <div class="form-card">
+                <!-- Metadata Tersembunyi (Tapi bisa diedit jika perlu, default disembunyikan agar rapi) -->
+                <div class="row-flex" style="display: none;" id="wrap-meta">
+                    <div class="form-group">
+                        <label>Tanggal Transaksi</label>
+                        <div class="input-wrapper"><i class="fa-solid fa-clock"></i><input id="in-tanggal" placeholder="Otomatis"></div>
+                    </div>
+                    <div class="form-group">
+                        <label>No Referensi</label>
+                        <div class="input-wrapper"><i class="fa-solid fa-hashtag"></i><input id="in-ref" placeholder="Otomatis"></div>
+                    </div>
                 </div>
-                <div id="tab-edit" class="edit-form">
+
+                <!-- Field 1: ID Pelanggan / Rek Tujuan (PLN) ATAU Rek Pengirim (Transfer) -->
+                <div class="form-group" id="wrap-f1">
+                    <label id="lbl-f1">ID Pelanggan / No. Meter</label>
+                    <div class="input-wrapper"><i class="fa-solid fa-id-card" id="icn-f1"></i><input id="in-f1" placeholder="Otomatis / Manual"></div>
+                </div>
+
+                <!-- Field 2: Nama Pelanggan (PLN) ATAU Nama Pengirim (Transfer) -->
+                <div class="form-group" id="wrap-f2">
+                    <label id="lbl-f2">Nama Pelanggan</label>
+                    <div class="input-wrapper"><i class="fa-solid fa-user" id="icn-f2"></i><input id="in-f2" placeholder="Otomatis / Manual"></div>
+                </div>
+
+                <!-- Khusus Transfer: Field 3 (Rek Tujuan) & 4 (Nama Tujuan) & 5 (Bank) -->
+                <div id="wrap-tujuan-transfer" style="display: none; flex-direction: column; gap: 16px;">
                     <div class="form-group">
-                        <label>Tanggal & Waktu</label>
-                        <input type="text" id="in-tanggal" placeholder="Minggu, 21 Juni 2026 10:30:00 WIB">
+                        <label id="lbl-tujuan-rek">Rekening Tujuan</label>
+                        <div class="input-wrapper"><i class="fa-solid fa-id-card"></i><input id="in-tujuan-rek" placeholder="Otomatis / Manual"></div>
                     </div>
                     <div class="form-group">
-                        <label>Nomor Referensi</label>
-                        <input type="text" id="in-ref" placeholder="161267832073">
+                        <label id="lbl-tujuan-nama">Nama Tujuan</label>
+                        <div class="input-wrapper"><i class="fa-solid fa-user"></i><input id="in-tujuan-nama" placeholder="Otomatis / Manual"></div>
                     </div>
-                    <div style="border-left: 3px solid var(--primary); padding-left: 10px; margin-top: 10px;">
-                        <div class="form-group"><label id="label-pengirim-nama">Nama Pengirim</label><input type="text" id="in-pengirim-nama"></div>
-                        <div class="form-group" style="margin-top: 8px;"><label id="label-pengirim-rek">Rekening Pengirim</label><input type="text" id="in-pengirim-rek"></div>
+                    <div class="form-group">
+                        <label id="lbl-tujuan-bank">Bank Tujuan</label>
+                        <div class="input-wrapper"><i class="fa-solid fa-building-columns"></i><input id="in-tujuan-bank" placeholder="BCA / BRI / MANDIRI"></div>
                     </div>
-                    <div style="border-left: 3px solid #10b981; padding-left: 10px; margin-top: 10px;">
-                        <div class="form-group"><label id="label-tujuan-nama">Nama Tujuan</label><input type="text" id="in-tujuan-nama"></div>
-                        <div class="form-group" id="container-tujuan-rek" style="margin-top: 8px;"><label id="label-tujuan-rek">Rekening Tujuan</label><input type="text" id="in-tujuan-rek"></div>
-                        <div class="form-group" id="container-tujuan-bank" style="margin-top: 8px;"><label id="label-tujuan-bank">Bank Tujuan</label><input type="text" id="in-tujuan-bank"></div>
-                        <div class="form-group" id="group-no-pelanggan" style="margin-top: 8px; display: none;">
-                            <label>Nomor Token</label>
-                            <input type="text" id="in-no-pelanggan" placeholder="1234-5678-9012-3456-7890">
-                        </div>
+                </div>
+
+                <!-- Khusus PLN: Tarif/Daya & JML KWH -->
+                <div class="row-flex" id="wrap-pln-detail">
+                    <div class="form-group">
+                        <label>Tarif/Daya</label>
+                        <div class="input-wrapper"><i class="fa-solid fa-plug"></i><input id="in-tarif-daya" placeholder="R1/900"></div>
                     </div>
-                    <div class="form-group" style="margin-top: 10px;">
+                    <div class="form-group">
+                        <label>JML KWH</label>
+                        <div class="input-wrapper"><i class="fa-solid fa-chart-pie"></i><input id="in-jml-kwh" placeholder="0,00"></div>
+                    </div>
+                </div>
+
+                <!-- Khusus PLN/Tagihan: TOKEN -->
+                <div class="form-group" id="wrap-token">
+                    <label>SERIAL NUMBER / TOKEN</label>
+                    <div class="input-wrapper input-token"><i class="fa-solid fa-key"></i><input id="in-token" placeholder="20 Digit Angka"></div>
+                </div>
+
+                <!-- Nominal & Admin -->
+                <div class="row-flex">
+                    <div class="form-group">
                         <label>Nominal (Rp)</label>
-                        <input type="text" id="in-nominal" inputmode="numeric" placeholder="50000">
+                        <div class="input-wrapper"><div class="rp-text">Rp</div><input id="in-nominal" inputmode="numeric" placeholder="0"></div>
                     </div>
                     <div class="form-group">
-                        <label>Biaya Admin (Rp)</label>
-                        <input type="text" id="in-admin" inputmode="numeric" value="0">
+                        <label>Admin (Rp)</label>
+                        <div class="input-wrapper"><i class="fa-solid fa-plus"></i><input id="in-admin" inputmode="numeric" value="2500"></div>
                     </div>
                 </div>
-                
-                <div id="tab-preview" class="preview-container">
-                    <div class="receipt-paper" id="printable-receipt">
-                        <div class="receipt-center">
-                            <h3>MUSTAKIM MINI ATM</h3>
-                            <p style="margin-top: 5px;">BUKTI TRANSFER</p>
-                        </div>
-                        <div class="receipt-line"></div>
-                        <div class="receipt-row"><div class="r-label" id="label-out-tanggal">Tanggal</div><div class="r-colon">:</div><div class="r-value" id="out-tanggal">--/--/---- --:--</div></div>
-                        <div class="receipt-row"><div class="r-label" id="label-out-ref">No. Referensi</div><div class="r-colon">:</div><div class="r-value" id="out-ref">--</div></div>
-                        <div class="receipt-line" id="line-pembatas-ref"></div>
-                        
-                        <div class="receipt-row" style="margin-bottom: 5px;" id="row-label-pengirim"><div class="r-label" id="label-out-pengirim" style="width:100%; font-weight:bold;">PENGIRIM</div></div>
-                        <div class="receipt-row"><div class="r-label" id="label-out-pengirim-nama">Nama</div><div class="r-colon">:</div><div class="r-value" id="out-pengirim-nama">--</div></div>
-                        <div class="receipt-row"><div class="r-label" id="label-out-pengirim-rek">Rekening</div><div class="r-colon">:</div><div class="r-value" id="out-pengirim-rek">--</div></div>
-                        <div class="receipt-line" id="line-tujuan"></div>
-                        
-                        <div class="receipt-row" style="margin-bottom: 5px;" id="row-label-tujuan"><div class="r-label" id="label-out-tujuan" style="width:100%; font-weight:bold;">PENERIMA</div></div>
-                        <div class="receipt-row"><div class="r-label" id="label-out-tujuan-nama">Nama</div><div class="r-colon">:</div><div class="r-value" id="out-tujuan-nama">--</div></div>
-                        <div class="receipt-row" id="row-out-tujuan-rek"><div class="r-label" id="label-out-tujuan-rek">Rekening</div><div class="r-colon">:</div><div class="r-value" id="out-tujuan-rek">--</div></div>
-                        <div class="receipt-row" id="row-out-tujuan-bank"><div class="r-label" id="label-out-tujuan-bank">Bank</div><div class="r-colon">:</div><div class="r-value" id="out-tujuan-bank">--</div></div>
-                        
-                        <div id="block-out-no-pelanggan" style="display: none; text-align: center; margin: 15px 0;">
-                            <div style="font-size: 12px; margin-bottom: 5px;">** Serial Number **</div>
-                            <div id="out-no-pelanggan" style="font-weight: 700; font-size: 16px; letter-spacing: 1px;">--</div>
-                        </div>
-                        
-                        <div class="receipt-line"></div>
-                        <div class="receipt-row"><div class="r-label">Nominal</div><div class="r-colon">:</div><div class="r-value" id="out-nominal">Rp 0</div></div>
-                        <div class="receipt-row"><div class="r-label">Biaya Admin</div><div class="r-colon">:</div><div class="r-value" id="out-admin">Rp 0</div></div>
-                        <div class="receipt-row bold"><div class="r-label">TOTAL</div><div class="r-colon">:</div><div class="r-value" id="out-total">Rp 0</div></div>
-                        <div class="receipt-line"></div>
-                        <div class="receipt-center" style="margin-top: 20px; color: #475569;">
-                            <p>Transaksi berhasil</p>
-                            <p>Terima kasih telah menggunakan<br>layanan kami</p>
-                            <p style="margin-top:10px">==============================</p>
-                        </div>
-                    </div>
-                    <div style="display: flex; gap: 10px; width: 100%; max-width: 280px; margin-top: 15px;">
-                        <button class="btn btn-secondary" style="flex: 1;" onclick="simpanKeRiwayat()"><i class="fa-solid fa-floppy-disk"></i> Simpan</button>
-                        <button class="btn" style="flex: 1; background: #25D366; color: white;" onclick="shareKeWhatsApp(this)"><i class="fa-brands fa-whatsapp"></i> Share WA</button>
-                    </div>
-                </div>
+
+                <button class="btn-submit" onclick="bukaModalStruk()">
+                    <i class="fa-solid fa-print"></i> Tampilkan Struk & Simpan
+                </button>
             </div>
         </div>
 
-        <div id="page-dokumen" class="page hidden">
-            <div class="upload-section">
-                <div class="upload-card">
-                    <div class="upload-icon"><i class="fa-solid fa-file-pdf"></i></div>
-                    <h2 style="font-size: 16px; font-weight: 700;">Scan Dokumen</h2>
-                    <p style="font-size: 13px; color: var(--text-muted); margin: 5px 0 15px 0;">Upload Foto atau File PDF untuk diubah menjadi teks</p>
-                    
-                    <div class="form-group" style="width: 100%; margin-bottom: 15px; text-align: left;">
-                        <label style="margin-bottom: 5px; display: block;">Deteksi Bahasa</label>
+        <!-- HALAMAN 2: DOKUMEN -->
+        <div id="page-dokumen" class="page" style="padding: 20px;">
+            <div class="form-card" style="margin: 0; text-align: center;">
+                <i class="fa-solid fa-file-pdf" style="font-size: 40px; color: var(--primary); margin-bottom: 10px;"></i>
+                <h2 style="font-size: 18px; font-weight: 700; color: var(--text-main);">Scan Dokumen</h2>
+                <p style="font-size: 13px; color: var(--text-muted); margin-bottom: 20px;">Ubah foto/PDF menjadi teks</p>
+                
+                <div class="form-group" style="text-align: left; margin-bottom: 15px;">
+                    <label>Bahasa Deteksi</label>
+                    <div class="input-wrapper">
+                        <i class="fa-solid fa-language"></i>
                         <select id="doc-lang">
                             <option value="eng+ind" selected>Indonesia & Inggris</option>
                             <option value="ara">Arab (Arabic)</option>
-                            <option value="chi_sim">Mandarin (Simplified)</option>
-                            <option value="jpn">Jepang (Japanese)</option>
-                            <option value="kor">Korea (Korean)</option>
-                            <option value="rus">Rusia (Russian)</option>
-                            <option value="fra">Prancis (French)</option>
-                            <option value="deu">Jerman (German)</option>
-                            <option value="spa">Spanyol (Spanish)</option>
+                            <option value="chi_sim">Mandarin</option>
                         </select>
                     </div>
+                </div>
 
-                    <input type="file" id="doc-input-kamera" accept="image/*" capture="environment" style="display: none;">
-                    <input type="file" id="doc-input-file" accept="image/*, application/pdf" style="display: none;">
+                <input type="file" id="doc-input-file" accept="image/*, application/pdf" style="display: none;">
+                <button class="btn-submit" onclick="document.getElementById('doc-input-file').click()" style="width: 100%;">
+                    <i class="fa-solid fa-upload"></i> Pilih File / Foto
+                </button>
+            </div>
+
+            <div id="doc-result-section" style="display: none; flex-direction: column; gap: 15px; margin-top: 20px;">
+                <div class="form-card" style="margin: 0; padding: 15px;">
+                    <label style="font-size: 12px; font-weight: 700; color: #64748b; margin-bottom: 8px; display: block;">Hasil Teks:</label>
+                    <textarea id="doc-text" rows="10" style="width: 100%; border: 1px solid var(--border-color); border-radius: 8px; padding: 12px; font-size: 13px; font-family: inherit; resize: vertical; outline: none;"></textarea>
                     
-                    <div class="btn-group">
-                        <button class="btn btn-primary" onclick="document.getElementById('doc-input-kamera').click()"><i class="fa-solid fa-camera"></i> Kamera</button>
-                        <button class="btn btn-secondary" onclick="document.getElementById('doc-input-file').click()"><i class="fa-solid fa-file-arrow-up"></i> File / PDF</button>
-                    </div>
-                </div>
-                <div id="doc-result-section" style="display: none; flex-direction: column; gap: 10px;">
-                    <div class="form-group">
-                        <label>Hasil Teks (Bisa diketik & diedit di HP)</label>
-                        <textarea id="doc-text" rows="14"></textarea>
-                    </div>
-                    <div style="display: flex; gap: 10px; margin-top: 5px;">
-                        <button class="btn btn-secondary" style="flex: 1;" onclick="saveAsTXT()"><i class="fa-solid fa-file-lines"></i> Simpan TXT</button>
-                        <button class="btn btn-primary" style="flex: 1; background: #ef4444;" onclick="saveAsPDF()"><i class="fa-solid fa-file-pdf"></i> Simpan PDF</button>
+                    <div class="row-flex" style="margin-top: 15px;">
+                        <button class="btn-submit" style="background: white; color: var(--text-main); border: 1px solid var(--border-color); flex:1; padding: 12px;" onclick="saveAsTXT()"><i class="fa-solid fa-file-lines"></i> TXT</button>
+                        <button class="btn-submit" style="background: #ef4444; flex:1; padding: 12px;" onclick="saveAsPDF()"><i class="fa-solid fa-file-pdf"></i> PDF</button>
                     </div>
                 </div>
             </div>
         </div>
 
-        <div id="page-riwayat" class="page hidden">
-            <div style="padding: 20px;">
-                <h2 style="font-size: 16px; font-weight: 700; margin-bottom: 15px;">Riwayat Transaksi</h2>
-                <div id="riwayat-loading" style="text-align: center; padding: 30px 0; color: var(--text-muted); font-size: 13px;"><i class="fa-solid fa-spinner fa-spin"></i> Memuat riwayat...</div>
-                <div id="riwayat-empty" style="display: none; text-align: center; padding: 40px 20px; color: var(--text-muted);">
-                    <i class="fa-regular fa-folder-open" style="font-size: 32px; margin-bottom: 10px; display: block;"></i>
-                    <p style="font-size: 13px;">Belum ada transaksi tersimpan.</p>
-                </div>
-                <div id="riwayat-list" style="display: flex; flex-direction: column; gap: 10px;"></div>
+        <!-- HALAMAN 3: RIWAYAT -->
+        <div id="page-riwayat" class="page" style="padding: 20px;">
+            <h2 style="font-size: 18px; font-weight: 800; margin-bottom: 15px; color: var(--text-main);">Riwayat Transaksi</h2>
+            <div id="riwayat-loading" style="text-align: center; padding: 40px 0; color: var(--text-muted);"><i class="fa-solid fa-spinner fa-spin" style="font-size: 24px; margin-bottom: 10px;"></i><p>Memuat...</p></div>
+            <div id="riwayat-empty" style="display: none; text-align: center; padding: 50px 20px; color: var(--text-muted);">
+                <i class="fa-regular fa-folder-open" style="font-size: 40px; margin-bottom: 15px; color: #cbd5e1;"></i>
+                <p style="font-size: 14px; font-weight: 500;">Belum ada riwayat tersimpan.</p>
             </div>
+            <div id="riwayat-list" style="display: flex; flex-direction: column;"></div>
         </div>
 
+        <!-- BOTTOM NAVIGATION -->
         <nav class="bottom-nav">
-            <div class="nav-item active" id="nav-pindai" onclick="switchPage('scan')"><i class="fa-solid fa-expand"></i><span>Pindai</span></div>
-            <div class="nav-item" id="nav-dokumen" onclick="switchPage('dokumen')"><i class="fa-solid fa-file-signature"></i><span>Dokumen</span></div>
-            <div class="nav-item" id="nav-riwayat" onclick="switchPage('riwayat')"><i class="fa-solid fa-clock-rotate-left"></i><span>Riwayat</span></div>
+            <div class="nav-item active" onclick="switchPage('beranda', this)"><i class="fa-solid fa-house"></i><span>Beranda</span></div>
+            <div class="nav-item" onclick="switchPage('dokumen', this)"><i class="fa-solid fa-file-signature"></i><span>Dokumen</span></div>
+            <div class="nav-item" onclick="switchPage('riwayat', this)"><i class="fa-solid fa-clock-rotate-left"></i><span>Riwayat</span></div>
         </nav>
+
+        <!-- MODAL PREVIEW STRUK -->
+        <div class="modal-overlay" id="modal-struk">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h2>Pratinjau Struk</h2>
+                    <button class="btn-close" onclick="tutupModalStruk()"><i class="fa-solid fa-xmark"></i></button>
+                </div>
+                
+                <div class="receipt-paper" id="printable-receipt">
+                    <div class="receipt-center">
+                        <h3>MUSTAKIM CELL</h3>
+                        <p id="out-judul">STRUK TOKEN LISTRIK</p>
+                    </div>
+                    <div class="receipt-line"></div>
+                    <div class="receipt-row"><div class="r-label">Tanggal</div><div class="r-colon">:</div><div class="r-value" id="out-tanggal">--</div></div>
+                    <div class="receipt-row"><div class="r-label" id="lbl-out-ref">ID TRX</div><div class="r-colon">:</div><div class="r-value" id="out-ref">--</div></div>
+                    <div class="receipt-line"></div>
+                    
+                    <div class="receipt-row" id="row-out-f1"><div class="r-label" id="lbl-out-f1">ID Pelanggan</div><div class="r-colon">:</div><div class="r-value" id="out-f1">--</div></div>
+                    <div class="receipt-row" id="row-out-f2"><div class="r-label" id="lbl-out-f2">Nama Pelanggan</div><div class="r-colon">:</div><div class="r-value" id="out-f2">--</div></div>
+                    
+                    <!-- Khusus PLN -->
+                    <div class="receipt-row" id="row-out-tarif"><div class="r-label">Tarif/Daya</div><div class="r-colon">:</div><div class="r-value" id="out-tarif">--</div></div>
+                    <div class="receipt-row" id="row-out-kwh"><div class="r-label">Jumlah KWH</div><div class="r-colon">:</div><div class="r-value" id="out-kwh">--</div></div>
+                    
+                    <!-- Khusus Transfer -->
+                    <div class="receipt-row" id="row-out-tujuan-rek" style="display: none;"><div class="r-label">Rek Tujuan</div><div class="r-colon">:</div><div class="r-value" id="out-tujuan-rek">--</div></div>
+                    <div class="receipt-row" id="row-out-tujuan-nama" style="display: none;"><div class="r-label">Nama Tujuan</div><div class="r-colon">:</div><div class="r-value" id="out-tujuan-nama">--</div></div>
+                    <div class="receipt-row" id="row-out-tujuan-bank" style="display: none;"><div class="r-label">Bank/Produk</div><div class="r-colon">:</div><div class="r-value" id="out-tujuan-bank">--</div></div>
+                    
+                    <div id="block-out-no-pelanggan">
+                        <div style="font-size: 11px; margin-bottom: 5px;">** Serial Number **</div>
+                        <div id="out-no-pelanggan">--</div>
+                    </div>
+                    
+                    <div class="receipt-line"></div>
+                    <div class="receipt-row"><div class="r-label">Nominal</div><div class="r-colon">:</div><div class="r-value" id="out-nominal">Rp 0</div></div>
+                    <div class="receipt-row"><div class="r-label">Biaya Admin</div><div class="r-colon">:</div><div class="r-value" id="out-admin">Rp 0</div></div>
+                    <div class="receipt-row bold"><div class="r-label">TOTAL</div><div class="r-colon">:</div><div class="r-value" id="out-total">Rp 0</div></div>
+                    <div class="receipt-line"></div>
+                    <div class="receipt-center" style="margin-top: 15px; color: #475569;">
+                        <p>Transaksi berhasil</p>
+                        <p>Terima kasih telah menggunakan<br>layanan kami</p>
+                        <p style="margin-top:8px">==============================</p>
+                    </div>
+                </div>
+
+                <div class="modal-actions">
+                    <button class="btn-action primary" id="btn-printer" onclick="printReceiptBluetooth()"><i class="fa-solid fa-bluetooth"></i> Cetak Bluetooth</button>
+                    <div class="row-flex">
+                        <button class="btn-action outline" onclick="simpanKeRiwayat()"><i class="fa-solid fa-floppy-disk"></i> Simpan</button>
+                        <button class="btn-action whatsapp" onclick="shareKeWhatsApp(this)"><i class="fa-brands fa-whatsapp"></i> Share</button>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- MODAL RAW OCR -->
+        <div class="modal-overlay" id="raw-ocr-modal" style="align-items: center;">
+            <div style="background:white; border-radius:16px; max-width:400px; width:90%; display:flex; flex-direction:column; overflow:hidden;">
+                <div style="padding:15px 20px; border-bottom:1px solid var(--border-color); display:flex; justify-content:space-between; align-items:center;">
+                    <strong style="font-size:14px;">Teks Hasil Scan</strong>
+                    <button onclick="document.getElementById('raw-ocr-modal').style.display='none'" class="btn-close"><i class="fa-solid fa-xmark"></i></button>
+                </div>
+                <textarea id="raw-ocr-text" readonly style="flex:1; padding:15px; border:none; font-family:'Space Mono',monospace; font-size:12px; resize:none; min-height:250px; outline:none;"></textarea>
+                <div style="padding:15px; border-top:1px solid var(--border-color);">
+                    <button class="btn-submit" style="width:100%; padding:12px;" onclick="copyRawOcrText()"><i class="fa-solid fa-copy"></i> Salin Teks</button>
+                </div>
+            </div>
+        </div>
     </div>
 
     <script>
+        // CONFIG
         const API_URL = 'https://script.google.com/macros/s/AKfycbyelWPHqoyS8FyL86IOOziHJADaWLhRrmWGYjMEclcr4iEsC0DX7j9FkES5A8wiHwxz/exec';
+        let jenisTransaksiAktif = 'listrik'; // Default sesuai mockup
+        let printerConn = { device: null, characteristic: null, profile: null };
 
+        // UTILS
         let toastTimer = null;
         function showToast(message, type = 'info', duration = 3000) {
             const toast = document.getElementById('toast');
             toast.textContent = message;
-            toast.className = 'toast show' + (type === 'error' ? ' error' : type === 'success' ? ' success' : '');
+            toast.className = 'toast show ' + type;
             clearTimeout(toastTimer);
             toastTimer = setTimeout(() => { toast.classList.remove('show'); }, duration);
         }
-
-        function showRawOcrButton() { const btn = document.getElementById('btn-raw-ocr'); if (btn) btn.style.display = 'block'; }
-        function showRawOcrModal() { document.getElementById('raw-ocr-text').value = window.__lastRawOcrText || '(belum ada data)'; document.getElementById('raw-ocr-modal').style.display = 'flex'; }
-        function copyRawOcrText() {
-            const textarea = document.getElementById('raw-ocr-text');
-            textarea.select();
-            navigator.clipboard.writeText(textarea.value).then(() => { showToast('Teks disalin ke clipboard.', 'success'); }).catch(() => { showToast('Gagal menyalin otomatis, silakan salin manual.', 'error'); });
-        }
-
-        let jenisTransaksiAktif = 'transfer';
-
-        const KONFIGURASI_JENIS = {
-            transfer: {
-                labelUploadJudul: 'Upload Bukti Transfer', labelUploadSub: 'Foto screenshot bukti transfer (BRImo, BCA, Mandiri, dll)',
-                labelPengirim: 'PENGIRIM', labelPengirimNama: 'Nama Pengirim', labelPengirimRek: 'Rekening Pengirim',
-                labelTujuan: 'PENERIMA', labelTujuanNama: 'Nama Tujuan', labelTujuanRek: 'Rekening Tujuan', labelTujuanBank: 'Bank Tujuan',
-                showNoPelanggan: false, judulStruk: 'BUKTI TRANSFER'
-            },
-            ewallet: {
-                labelUploadJudul: 'Upload Bukti Topup E-Wallet', labelUploadSub: 'Foto screenshot bukti topup DANA, OVO, GoPay, ShopeePay, dll',
-                labelPengirim: 'SUMBER DANA', labelPengirimNama: 'Nama Pemilik Rekening', labelPengirimRek: 'Rekening Sumber',
-                labelTujuan: 'TOPUP E-WALLET', labelTujuanNama: 'Nama Pemilik Akun', labelTujuanRek: 'Nomor HP / ID Akun', labelTujuanBank: 'E-Wallet Tujuan',
-                showNoPelanggan: false, judulStruk: 'BUKTI TOPUP E-WALLET'
-            },
-            listrik: {
-                labelUploadJudul: 'Upload Bukti Token PLN', labelUploadSub: 'Foto screenshot bukti beli token (DANA, SPay, BRImo, OVO, dll)',
-                labelPengirim: 'PEMBAYAR', labelPengirimNama: 'Nama Pelanggan', labelPengirimRek: 'Sumber Dana',
-                labelTujuan: 'PLN', labelTujuanNama: 'ID Pelanggan', labelTujuanRek: 'Jumlah kWH', labelTujuanBank: 'Produk',
-                showNoPelanggan: true, judulStruk: 'STRUK TOKEN LISTRIK'
-            },
-            tagihan: {
-                labelUploadJudul: 'Upload Bukti Bayar Tagihan', labelUploadSub: 'Foto screenshot bukti bayar BPJS, kredit, pulsa, dll',
-                labelPengirim: 'PEMBAYAR', labelPengirimNama: 'Nama Pembayar', labelPengirimRek: 'Rekening/Sumber Dana',
-                labelTujuan: 'LAYANAN', labelTujuanNama: 'Nama Pelanggan', labelTujuanRek: 'Jenis Layanan', labelTujuanBank: 'Penyedia Layanan',
-                showNoPelanggan: true, judulStruk: 'BUKTI PEMBAYARAN'
-            }
-        };
-
-        function pilihJenisTransaksi(jenis, btnEl) {
-            jenisTransaksiAktif = jenis;
-            const cfg = KONFIGURASI_JENIS[jenis];
-            document.querySelectorAll('.chip-jenis').forEach(c => c.classList.remove('active'));
-            if (btnEl) btnEl.classList.add('active');
-            
-            document.querySelector('#upload-placeholder h2').innerText = cfg.labelUploadJudul;
-            document.querySelector('#upload-placeholder p').innerText = cfg.labelUploadSub;
-            document.getElementById('label-pengirim-nama').innerText = cfg.labelPengirimNama;
-            document.getElementById('label-pengirim-rek').innerText = cfg.labelPengirimRek;
-            document.getElementById('label-tujuan-nama').innerText = cfg.labelTujuanNama;
-            document.getElementById('label-tujuan-rek').innerText = cfg.labelTujuanRek;
-            document.getElementById('label-tujuan-bank').innerText = cfg.labelTujuanBank;
-            document.getElementById('group-no-pelanggan').style.display = cfg.showNoPelanggan ? 'block' : 'none';
-            document.querySelector('.receipt-center p').innerText = cfg.judulStruk;
-            document.getElementById('block-out-no-pelanggan').style.display = cfg.showNoPelanggan ? 'block' : 'none';
-
-            if (jenis === 'listrik') {
-                document.getElementById('row-label-pengirim').style.display = 'none';
-                document.getElementById('row-label-tujuan').style.display = 'none';
-                document.getElementById('line-tujuan').style.display = 'none';
-                document.getElementById('label-out-ref').innerText = 'ID TRX';
-                document.getElementById('label-out-pengirim-nama').innerText = 'NAMA PELANGGAN';
-                document.getElementById('label-out-pengirim-rek').innerText = 'SUMBER DANA';
-                document.getElementById('label-out-tujuan-nama').innerText = 'ID PELANGGAN';
-                document.getElementById('label-out-tujuan-rek').innerText = 'JUMLAH KWH';
-                document.getElementById('label-out-tujuan-bank').innerText = 'PRODUK';
-            } else {
-                document.getElementById('row-label-pengirim').style.display = 'flex';
-                document.getElementById('label-out-pengirim').innerText = cfg.labelPengirim;
-                document.getElementById('row-label-tujuan').style.display = 'flex';
-                document.getElementById('label-out-tujuan').innerText = cfg.labelTujuan;
-                document.getElementById('line-tujuan').style.display = 'block';
-                document.getElementById('label-out-ref').innerText = 'No. Referensi';
-                document.getElementById('label-out-pengirim-nama').innerText = 'Nama';
-                document.getElementById('label-out-pengirim-rek').innerText = 'Rekening';
-                document.getElementById('label-out-tujuan-nama').innerText = 'Nama';
-                document.getElementById('label-out-tujuan-rek').innerText = 'Rekening';
-                document.getElementById('label-out-tujuan-bank').innerText = 'Bank';
-            }
-        }
-
-        function switchTab(tabName, clickedEl) {
-            const tabs = document.querySelectorAll('.tab-btn');
-            tabs.forEach(t => t.classList.remove('active'));
-            let target = clickedEl;
-            if (!target) { target = Array.from(tabs).find(t => (tabName === 'edit' && t.textContent.includes('Edit')) || (tabName === 'preview' && t.textContent.includes('Pratinjau'))); }
-            if (target) target.classList.add('active');
-            if(tabName === 'edit') {
-                document.getElementById('tab-edit').style.display = 'flex';
-                document.getElementById('tab-preview').style.display = 'none';
-            } else {
-                document.getElementById('tab-edit').style.display = 'none';
-                document.getElementById('tab-preview').style.display = 'flex';
-                syncPreviewData();
-            }
-        }
-
         function formatRibuan(angka) { return parseInt(String(angka).replace(/\D/g, ''))?.toLocaleString('id-ID') || '0'; }
-
-        function syncPreviewData() {
-            document.getElementById('out-tanggal').innerText = document.getElementById('in-tanggal').value || '-';
-            document.getElementById('out-ref').innerText = document.getElementById('in-ref').value || '-';
-            document.getElementById('out-pengirim-nama').innerText = document.getElementById('in-pengirim-nama').value || '-';
-            document.getElementById('out-pengirim-rek').innerText = document.getElementById('in-pengirim-rek').value || '-';
-            document.getElementById('out-tujuan-nama').innerText = document.getElementById('in-tujuan-nama').value || '-';
-            document.getElementById('out-tujuan-rek').innerText = document.getElementById('in-tujuan-rek').value || '-';
-            document.getElementById('out-tujuan-bank').innerText = document.getElementById('in-tujuan-bank').value || '-';
-            const noPelangganEl = document.getElementById('in-no-pelanggan');
-            if (noPelangganEl) document.getElementById('out-no-pelanggan').innerText = formatNoPelangganTampil(noPelangganEl.value);
-            const nominal = document.getElementById('in-nominal').value || '0';
-            const admin = document.getElementById('in-admin').value || '0';
-            document.getElementById('out-nominal').innerText = 'Rp ' + formatRibuan(nominal);
-            document.getElementById('out-admin').innerText = 'Rp ' + formatRibuan(admin);
-            let n = parseInt(String(nominal).replace(/\D/g, '')) || 0;
-            let a = parseInt(String(admin).replace(/\D/g, '')) || 0;
-            document.getElementById('out-total').innerText = 'Rp ' + (n + a).toLocaleString('id-ID');
+        
+        // PAGE NAVIGATION
+        function switchPage(pageId, navEl) {
+            document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
+            document.querySelectorAll('.nav-item').forEach(n => n.classList.remove('active'));
+            document.getElementById('page-' + pageId).classList.add('active');
+            navEl.classList.add('active');
+            if(pageId === 'riwayat') loadRiwayat();
         }
 
-        document.querySelectorAll('.edit-form input').forEach(input => { input.addEventListener('input', syncPreviewData); });
-        
-        document.getElementById('kamera-input').addEventListener('change', handleImageUpload);
-        document.getElementById('galeri-input').addEventListener('change', handleImageUpload);
-        
-        const docInputKamera = document.getElementById('doc-input-kamera');
-        const docInputFile = document.getElementById('doc-input-file');
-        if(docInputKamera) { docInputKamera.addEventListener('change', handleDocUpload); }
-        if(docInputFile) { docInputFile.addEventListener('change', handleDocUpload); }
+        // FORM DYNAMICS
+        function pilihJenisTransaksi(jenis, el) {
+            jenisTransaksiAktif = jenis;
+            document.querySelectorAll('.trx-tab').forEach(t => t.classList.remove('active'));
+            el.classList.add('active');
 
-        function handleImageUpload(e) {
+            const lblTitle = document.getElementById('lbl-scan-title');
+            const lblSub = document.getElementById('lbl-scan-sub');
+            
+            const wF1 = document.getElementById('wrap-f1');
+            const lblF1 = document.getElementById('lbl-f1');
+            const icnF1 = document.getElementById('icn-f1');
+            const inF1 = document.getElementById('in-f1');
+            
+            const wF2 = document.getElementById('wrap-f2');
+            const lblF2 = document.getElementById('lbl-f2');
+            const icnF2 = document.getElementById('icn-f2');
+            const inF2 = document.getElementById('in-f2');
+
+            const wTujuanTF = document.getElementById('wrap-tujuan-transfer');
+            const wPln = document.getElementById('wrap-pln-detail');
+            const wToken = document.getElementById('wrap-token');
+
+            // Reset placeholders
+            inF1.placeholder = "Otomatis / Manual";
+            inF2.placeholder = "Otomatis / Manual";
+
+            if(jenis === 'listrik') {
+                lblTitle.innerText = "Scan Bukti Token PLN";
+                lblSub.innerText = "Upload struk Shopee, DANA, Tokopedia dll";
+                
+                lblF1.innerText = "ID Pelanggan / No. Meter"; icnF1.className = "fa-solid fa-id-card";
+                lblF2.innerText = "Nama Pelanggan"; icnF2.className = "fa-solid fa-user";
+                
+                wF1.style.display = 'flex'; wF2.style.display = 'flex';
+                wPln.style.display = 'flex'; wToken.style.display = 'flex';
+                wTujuanTF.style.display = 'none';
+
+            } else if(jenis === 'transfer') {
+                lblTitle.innerText = "Scan Bukti Transfer";
+                lblSub.innerText = "Upload bukti transfer BCA, Mandiri, BRI dll";
+                
+                lblF1.innerText = "Rekening Pengirim"; icnF1.className = "fa-solid fa-wallet";
+                lblF2.innerText = "Nama Pengirim"; icnF2.className = "fa-solid fa-user";
+                
+                wF1.style.display = 'flex'; wF2.style.display = 'flex';
+                wTujuanTF.style.display = 'flex';
+                wPln.style.display = 'none'; wToken.style.display = 'none';
+
+            } else if(jenis === 'ewallet') {
+                lblTitle.innerText = "Scan Bukti E-Wallet";
+                lblSub.innerText = "Upload bukti topup DANA, OVO, GoPay dll";
+                
+                lblF1.innerText = "Sumber Dana"; icnF1.className = "fa-solid fa-wallet";
+                lblF2.innerText = "Nama Pemilik Sumber"; icnF2.className = "fa-solid fa-user";
+                
+                document.getElementById('lbl-tujuan-rek').innerText = "Nomor HP / Akun";
+                document.getElementById('lbl-tujuan-nama').innerText = "Nama Akun Tujuan";
+                document.getElementById('lbl-tujuan-bank').innerText = "E-Wallet (DANA/OVO)";
+                
+                wF1.style.display = 'flex'; wF2.style.display = 'flex';
+                wTujuanTF.style.display = 'flex';
+                wPln.style.display = 'none'; wToken.style.display = 'none';
+                
+            } else if(jenis === 'tagihan') {
+                lblTitle.innerText = "Scan Bayar Tagihan";
+                lblSub.innerText = "Upload struk PDAM, BPJS, Internet dll";
+                
+                lblF1.innerText = "Sumber Dana"; icnF1.className = "fa-solid fa-wallet";
+                lblF2.innerText = "Nama Pembayar"; icnF2.className = "fa-solid fa-user";
+                
+                document.getElementById('lbl-tujuan-rek').innerText = "No. Pelanggan/Tagihan";
+                document.getElementById('lbl-tujuan-nama').innerText = "Nama Pelanggan";
+                document.getElementById('lbl-tujuan-bank').innerText = "Penyedia (PDAM/BPJS)";
+                
+                wF1.style.display = 'flex'; wF2.style.display = 'flex';
+                wTujuanTF.style.display = 'flex'; wToken.style.display = 'flex';
+                wPln.style.display = 'none';
+            }
+        }
+
+        // OCR CORE (BERANDA)
+        document.getElementById('main-file-input').addEventListener('change', function(e) {
             const file = e.target.files[0];
             if (!file) return;
             const reader = new FileReader();
             reader.onload = function(event) {
-                document.getElementById('image-preview').src = event.target.result;
-                document.getElementById('image-preview').style.display = 'block';
-                document.getElementById('upload-placeholder').style.display = 'none';
                 processOCR(event.target.result);
             };
             reader.readAsDataURL(file);
             e.target.value = '';
-        }
+        });
 
         function processOCR(imageSrc) {
             const loader = document.getElementById('loader');
             loader.style.display = 'flex';
-            document.getElementById('result-section').style.display = 'none';
+            document.getElementById('loader-title').innerText = "Membaca Struk...";
+            document.getElementById('loader-sub').innerText = "AI mengekstrak data otomatis";
+            
             function runOCR(srcToUse) {
                 Tesseract.recognize(srcToUse, 'ind', { logger: m => console.log(m), tessedit_pageseg_mode: '6' })
                 .then(({ data: { text } }) => {
                     loader.style.display = 'none';
-                    document.getElementById('result-section').style.display = 'flex';
                     window.__lastRawOcrText = text;
-                    showRawOcrButton();
-                    try { extractDataFromText(text); switchTab('edit'); showToast('Struk terbaca!', 'success'); }
-                    catch (err) { console.error(err); switchTab('edit'); showToast('Harap lengkapi data manual.', 'info', 4000); }
+                    document.getElementById('btn-raw-ocr').style.display = 'block';
+                    try { 
+                        extractDataFromText(text); 
+                        showToast('Data berhasil dibaca!', 'success'); 
+                    }
+                    catch (err) { 
+                        console.error(err); 
+                        showToast('Harap lengkapi data manual.', 'info'); 
+                    }
                 }).catch(err => {
                     loader.style.display = 'none';
-                    document.getElementById('result-section').style.display = 'flex';
-                    showToast('Gagal membaca otomatis.', 'error', 4000);
+                    showToast('Gagal membaca otomatis.', 'error');
                 });
             }
             const img = new Image();
@@ -470,101 +590,10 @@
             img.src = imageSrc;
         }
 
-        async function handleDocUpload(e) {
-            const file = e.target.files[0];
-            if (!file) return;
-            
-            const loader = document.getElementById('loader');
-            const loaderTitle = document.getElementById('loader-title');
-            const loaderSub = document.getElementById('loader-sub');
+        function showRawOcrModal() { document.getElementById('raw-ocr-text').value = window.__lastRawOcrText || ''; document.getElementById('raw-ocr-modal').style.display = 'flex'; }
+        function copyRawOcrText() { document.getElementById('raw-ocr-text').select(); document.execCommand('copy'); showToast('Disalin!'); }
 
-            if (file.type === 'application/pdf') {
-                loader.style.display = 'flex';
-                loaderTitle.innerText = "Memproses PDF...";
-                loaderSub.innerText = "Mengubah PDF menjadi gambar...";
-                
-                try {
-                    const fileReader = new FileReader();
-                    fileReader.onload = async function() {
-                        const typedarray = new Uint8Array(this.result);
-                        pdfjsLib.GlobalWorkerOptions.workerSrc = 'https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.worker.min.js';
-                        
-                        const pdf = await pdfjsLib.getDocument(typedarray).promise;
-                        const page = await pdf.getPage(1); 
-                        const viewport = page.getViewport({ scale: 2.0 });
-                        
-                        const canvas = document.createElement('canvas');
-                        const ctx = canvas.getContext('2d');
-                        canvas.height = viewport.height;
-                        canvas.width = viewport.width;
-                        
-                        await page.render({ canvasContext: ctx, viewport: viewport }).promise;
-                        processDocOCR(canvas.toDataURL('image/png'));
-                    };
-                    fileReader.readAsArrayBuffer(file);
-                } catch (err) {
-                    loader.style.display = 'none';
-                    showToast('Gagal membaca file PDF.', 'error');
-                }
-            } else {
-                const reader = new FileReader();
-                reader.onload = function(event) {
-                    processDocOCR(event.target.result);
-                };
-                reader.readAsDataURL(file);
-            }
-            e.target.value = '';
-        }
-
-        function processDocOCR(imageSrc) {
-            const loader = document.getElementById('loader');
-            const langSel = document.getElementById('doc-lang');
-            const selectedLang = langSel.value;
-            const langLabel = langSel.options[langSel.selectedIndex].text;
-            
-            loader.style.display = 'flex';
-            document.getElementById('loader-title').innerText = "Membaca Dokumen...";
-            document.getElementById('loader-sub').innerText = "AI sedang mengekstrak teks (" + langLabel + ")...";
-            
-            Tesseract.recognize(imageSrc, selectedLang, { logger: m => console.log(m) })
-            .then(({ data: { text } }) => {
-                loader.style.display = 'none';
-                document.getElementById('doc-result-section').style.display = 'flex';
-                document.getElementById('doc-text').value = text;
-                showToast('Teks dokumen berhasil diekstrak!', 'success');
-            }).catch(err => {
-                loader.style.display = 'none';
-                showToast('Gagal membaca dokumen.', 'error');
-            }).finally(() => {
-                document.getElementById('loader-title').innerText = "Memproses Gambar...";
-                document.getElementById('loader-sub').innerText = "AI sedang membaca teks pada struk";
-            });
-        }
-
-        function saveAsTXT() {
-            const text = document.getElementById('doc-text').value;
-            if(!text) { showToast('Teks dokumen kosong!', 'error'); return; }
-            const blob = new Blob([text], { type: 'text/plain' });
-            const url = URL.createObjectURL(blob);
-            const a = document.createElement('a');
-            a.href = url;
-            a.download = 'Dokumen_Mustakim_' + Date.now() + '.txt';
-            a.click();
-            URL.revokeObjectURL(url);
-        }
-
-        function saveAsPDF() {
-            const text = document.getElementById('doc-text').value;
-            if(!text) { showToast('Teks dokumen kosong!', 'error'); return; }
-            if(!window.jspdf) { showToast('Library PDF sedang disiapkan. Coba sebentar lagi.', 'info'); return; }
-            const { jsPDF } = window.jspdf;
-            const doc = new jsPDF();
-            const splitText = doc.splitTextToSize(text, 180);
-            doc.text(splitText, 15, 15);
-            doc.save('Dokumen_Mustakim_' + Date.now() + '.pdf');
-            showToast('PDF berhasil diunduh!', 'success');
-        }
-
+        // EXTRACTION LOGIC
         function detectTokenPLN(dataText) {
             const tokenMatch = dataText.match(/(?:token|stroom|kode\s*token|no\.?\s*token|serial\s*number)[:\s]*((?:\d[\s\-]?){20})/i);
             if (tokenMatch) return tokenMatch[1].replace(/[\s\-]/g, '');
@@ -573,14 +602,11 @@
             for (const kandidat of kandidatToken) {
                 const posisi = kandidat.index;
                 const konteksSebelum = dataText.substring(Math.max(0, posisi - 30), posisi);
-                if (!kataKunciBukanToken.test(konteksSebelum)) {
-                    return kandidat[0].replace(/[\s\-]/g, '');
-                }
+                if (!kataKunciBukanToken.test(konteksSebelum)) return kandidat[0].replace(/[\s\-]/g, '');
             }
             return '';
         }
 
-        // FUNGSI BARU YANG JAUH LEBIH AKURAT UNTUK KWH
         function detectKWH(dataText) {
             let m = dataText.match(/(?:jml\s*kwh|jumlah\s*kwh|kwh)\s*[:\-\s]*(\d+([.,]\d+)?)/i);
             if (m) return m[1];
@@ -589,133 +615,77 @@
             return '';
         }
 
+        function detectTarifDaya(dataText) {
+            // Mencari format seperti R1/900, R1M/900 VA, R1/450
+            let m = dataText.match(/\b([RBMP][1-3][A-Z]?\s*\/\s*\d{3,5}(?:\s*VA)?)\b/i);
+            if (m) return m[1].toUpperCase();
+            return '';
+        }
+
         function extractDataFromText(text) {
             const lines = text.split('\n').map(l => l.trim()).filter(l => l.length > 0);
             let dataText = text.replace(/\n/g, ' ');
 
-            ['in-nominal', 'in-ref', 'in-tanggal', 'in-pengirim-nama', 'in-pengirim-rek', 'in-tujuan-nama', 'in-tujuan-rek', 'in-tujuan-bank', 'in-no-pelanggan']
-            .forEach(id => { if (document.getElementById(id)) document.getElementById(id).value = ''; });
+            // Reset
+            ['in-f1','in-f2','in-tujuan-rek','in-tujuan-nama','in-tujuan-bank','in-tarif-daya','in-jml-kwh','in-token','in-nominal'].forEach(id => document.getElementById(id).value = '');
+            
+            // Set Tanggal Default jika gagal terbaca
+            document.getElementById('in-tanggal').value = new Date().toLocaleDateString('id-ID', { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric', hour: '2-digit', minute: '2-digit' }).replace(/\./g, ':') + ' WIB';
+
+            // Universal Extractors
+            let pDate = "";
+            let pRef = dataText.match(/(?:ref|trx|referensi|transaksi)\s*[:\s]*([a-zA-Z0-9]+)/i);
+            if(pRef) document.getElementById('in-ref').value = pRef[1];
+            
+            let nomMatch = dataText.match(/(?:rp|total|bayar|nominal|stroom)[^\d]*(\d{2,3}[\.\,]\d{3}(?:[\.\,]\d{3})?)/i) || dataText.match(/Rp\s*([\d\.\,]+)/i);
+            if (nomMatch) document.getElementById('in-nominal').value = nomMatch[1].replace(/[\.\,]/g, '');
 
             if (jenisTransaksiAktif === 'listrik') {
-                let pDate = "", pRef = "", pNama = "", pId = "", pDaya = "", pToken = "", pNominal = "", pSumber = "";
-                pToken = detectTokenPLN(dataText);
+                document.getElementById('in-token').value = detectTokenPLN(dataText);
+                document.getElementById('in-jml-kwh').value = detectKWH(dataText);
+                document.getElementById('in-tarif-daya').value = detectTarifDaya(dataText);
+
+                let pId = "", pNama = "";
                 let gabunganMatch = dataText.match(/(?:Token Listrik|PLN)[^\d]*\d+[a-zA-Z]*\s+(\d{11,12})\s+([A-Za-z\s]+)/i);
-                if (gabunganMatch) {
-                    pId = gabunganMatch[1];
-                    // Modifikasi agar spasi dipertahankan
-                    pNama = gabunganMatch[2].trim().replace(/\s+/g, ' ');
-                }
+                if (gabunganMatch) { pId = gabunganMatch[1]; pNama = gabunganMatch[2].trim().replace(/\s+/g, ' '); }
 
                 for (let i = 0; i < lines.length; i++) {
-                    let line = lines[i];
-                    let lLower = line.toLowerCase();
-
-                    if (!pId && (lLower.includes('id pel') || lLower.includes('idpel') || lLower.includes('meter') || lLower.includes('pelanggan'))) {
-                        let m = line.match(/(\d{11,12})/);
-                        if (m) pId = m[1];
-                    }
-                    if (!pId) {
-                        let anyId = line.match(/(?<!\d)(\d{11,12})(?!\d)/);
-                        if (anyId) pId = anyId[1];
-                    }
-
+                    let line = lines[i]; let lLower = line.toLowerCase();
+                    if (!pId && (lLower.includes('id pel') || lLower.includes('meter'))) { let m = line.match(/(\d{11,12})/); if (m) pId = m[1]; }
+                    if (!pId) { let anyId = line.match(/(?<!\d)(\d{11,12})(?!\d)/); if (anyId) pId = anyId[1]; }
+                    
                     if (!pNama) {
                         let spaced = line.match(/\b(?:[A-Z]\s){2,}[A-Z]\b/);
                         if (spaced) pNama = spaced[0].replace(/\s+/g, '');
-                        if (!pNama) {
-                            let m = line.match(/\b\d{11,12}\s+([A-Za-z\s]{3,})/);
-                            if (m) pNama = m[1].replace(/\s+/g, ' ').trim();
-                        }
+                        if (!pNama) { let m = line.match(/\b\d{11,12}\s+([A-Za-z\s]{3,})/); if (m) pNama = m[1].replace(/\s+/g, ' ').trim(); }
                         if (!pNama && (lLower.includes('nama'))) {
                             let n = line.replace(/^(nama\s*pelanggan|nama\s*pel|nama)[:\s\-]*/i, '').trim();
                             if (!n && i + 1 < lines.length) n = lines[i + 1].trim();
                             if (n) pNama = n.replace(/\s+/g, ' ').trim();
                         }
                     }
-
-                    if (!pRef && (lLower.includes('ref') || lLower.includes('trx') || lLower.includes('transaksi'))) {
-                        let m = line.match(/(?:ref|trx|referensi|transaksi)\s*[:\s]*([a-zA-Z0-9]+)/i);
-                        if (m) pRef = m[1];
-                    }
-
-                    if (!pSumber && (lLower.includes('metode') || lLower.includes('pembayaran') || lLower.includes('bayar pakai'))) {
-                        let m = line.match(/(?:metode pembayaran|pembayaran|bayar pakai)\s*[:\s]*([a-zA-Z\s]+)/i);
-                        if (m) pSumber = m[1].trim();
-                    }
-
-                    if (!pDate) {
-                        let dm = line.match(/(\d{2}[\/\-]\d{2}[\/\-]\d{2,4}\s+\d{2}:\d{2}(?::\d{2})?)/) ||
-                                 line.match(/(\d{1,2}\s+[a-zA-Z]+\s+\d{4}\s+\d{2}:\d{2})/);
-                        if (dm) pDate = dm[1];
-                    }
                 }
-
-                pDaya = detectKWH(dataText); // MENGGUNAKAN FUNGSI DETEKSI BARU
-                
-                let nomMatch = dataText.match(/(?:rp|total|bayar|nominal|stroom)[^\d]*(\d{2,3}[\.\,]\d{3}(?:[\.\,]\d{3})?)/i) ||
-                               dataText.match(/Rp\s*([\d\.\,]+)/i);
-                if (nomMatch) pNominal = nomMatch[1].replace(/[\.\,]/g, '');
-
-                if (pDate) {
-                    document.getElementById('in-tanggal').value = pDate;
-                } else {
-                    document.getElementById('in-tanggal').value =
-                        new Date().toLocaleDateString('id-ID', { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric', hour: '2-digit', minute: '2-digit', second: '2-digit' }).replace(/\./g, ':') + ' WIB';
-                }
-
-                if (pRef) document.getElementById('in-ref').value = pRef;
-                if (pNominal) document.getElementById('in-nominal').value = pNominal;
-                if (pNama) document.getElementById('in-pengirim-nama').value = pNama;
-
-                if (pSumber) document.getElementById('in-pengirim-rek').value = pSumber;
-                else if (dataText.toLowerCase().includes('dana')) document.getElementById('in-pengirim-rek').value = 'DANA';
-                else if (dataText.toLowerCase().includes('shopeepay')) document.getElementById('in-pengirim-rek').value = 'ShopeePay';
-                else if (dataText.toLowerCase().includes('ovo')) document.getElementById('in-pengirim-rek').value = 'OVO';
-                else if (dataText.toLowerCase().includes('brimo')) document.getElementById('in-pengirim-rek').value = 'BRImo';
-
-                if (pId) document.getElementById('in-tujuan-nama').value = pId;
-                if (pDaya) {
-                    let dayaFix = pDaya.replace(/kwh/i, '').trim();
-                    document.getElementById('in-tujuan-rek').value = dayaFix + ' KWH';
-                }
-
-                document.getElementById('in-tujuan-bank').value = 'Token PLN';
-                if (pToken) document.getElementById('in-no-pelanggan').value = pToken;
-
-                syncPreviewData();
+                if (pId) document.getElementById('in-f1').value = pId;
+                if (pNama) document.getElementById('in-f2').value = pNama;
                 return;
             }
 
-            const nominalMatch = dataText.match(/Rp\s*([\d\.]+)/i);
-            if(nominalMatch) document.getElementById('in-nominal').value = nominalMatch[1].replace(/\./g, '');
-
-            const refMatch = dataText.match(/(?:Ref(?:erensi)?|ID\s*Transaksi)[:\s]*\D{0,5}(\d{10,})/i);
-            if(refMatch) document.getElementById('in-ref').value = refMatch[1];
-
-            const dateMatch = dataText.match(/(\d{1,2}\s+[A-Za-z]+\s+\d{4})\D{0,3}(\d{2}:\d{2}(?::\d{2})?)\s*(WIB|WITA|WIT)?/i);
-            if (dateMatch) {
-                document.getElementById('in-tanggal').value = dateMatch[1] + ', ' + dateMatch[2] + (dateMatch[3] ? ' ' + dateMatch[3].toUpperCase() : '');
-            } else {
-                document.getElementById('in-tanggal').value = new Date().toLocaleDateString('id-ID', { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric', hour: '2-digit', minute: '2-digit', second: '2-digit' }).replace(/\./g, ':') + ' WIB';
-            }
-
+            // Transfer / E-Wallet / Tagihan parsing fallback
             let section = 'none';
             let pengirimData = [], tujuanData = [];
             const stripLabelPrefix = (line) => line.replace(/^(nama|rekening|akun(?:\s*dana)?|no\.?\s*rekening|nomor\s*hp|id\s*akun)[:\s]+/i, '').trim();
 
             for (let line of lines) {
                 let lLower = line.toLowerCase();
-                if (lLower.includes('sumber dana') || lLower === 'dari' || lLower.includes('pembayar') || lLower.includes('akun sumber')) { section = 'pengirim'; continue; }
-                if (lLower.includes('tujuan') || lLower === 'ke' || lLower.includes('detail pembayaran') || lLower.includes('detail tagihan') || lLower.includes('penerima')) { section = 'tujuan'; continue; }
-                if (lLower.includes('jenis transaksi') || lLower.includes('catatan') || lLower.includes('nominal') || lLower.includes('rincian')) { section = 'none'; }
+                if (lLower.includes('sumber dana') || lLower === 'dari' || lLower.includes('pembayar')) { section = 'pengirim'; continue; }
+                if (lLower.includes('tujuan') || lLower === 'ke' || lLower.includes('detail pembayaran') || lLower.includes('penerima')) { section = 'tujuan'; continue; }
+                if (lLower.includes('jenis transaksi') || lLower.includes('nominal')) { section = 'none'; }
                 if (section === 'pengirim') pengirimData.push(stripLabelPrefix(line));
                 if (section === 'tujuan') tujuanData.push(stripLabelPrefix(line));
             }
 
-            const noHpMatch = dataText.match(/\b(0|62)8[0-9]{8,11}\b/);
             const cleanName = (name) => { let p = name.split(' '); if (p.length > 1 && p[0].length <= 3 && p[0] === p[0].toUpperCase()) p.shift(); return p.join(' ').replace(/[^a-zA-Z\s\.]/g, '').trim(); };
-            const isBankAccount = (str) => /[\d\*\.\s\-xX]{5,}/.test(str) && (str.match(/\d/g) || []).length >= 2;
-            const isBankName = (str) => /bank|bca|\bbri\b|beri|mandiri|bni|bsi|cimb|dana|ovo|gopay|gojek|shopeepay|linkaja/i.test(str);
+            const isBankName = (str) => /bank|bca|\bbri\b|beri|mandiri|bni|bsi|cimb|dana|ovo|gopay|shopeepay/i.test(str);
             const cleanBankName = (str) => {
                 let s = str.toUpperCase();
                 if (s.includes('BERI') || s.includes('BRI')) return 'BANK BRI';
@@ -724,14 +694,12 @@
                 if (s.includes('BNI')) return 'BANK BNI';
                 if (s.includes('DANA')) return 'DANA';
                 if (s.includes('OVO')) return 'OVO';
-                if (s.includes('GOPAY') || s.includes('GOJEK')) return 'GOPAY';
+                if (s.includes('GOPAY')) return 'GOPAY';
                 if (s.includes('SHOPEEPAY')) return 'SHOPEEPAY';
                 return str.trim();
             };
-
             const cleanRekeningOcr = (str) => {
-                const firstDigit = str.search(/\d/);
-                const lastDigitFromEnd = [...str].reverse().join('').search(/\d/);
+                const firstDigit = str.search(/\d/); const lastDigitFromEnd = [...str].reverse().join('').search(/\d/);
                 if (firstDigit === -1) return str.trim();
                 let core = str.substring(firstDigit, str.length - lastDigitFromEnd);
                 if (/^[\d\*\s]+$/.test(core)) return core.trim().replace(/\s+/g, ' ');
@@ -740,317 +708,306 @@
 
             let pNama = "", pRek = "", pBank = "";
             for (let item of pengirimData) {
-                if (isBankAccount(item) && pRek === "") pRek = cleanRekeningOcr(item);
+                if (/[\d\*\.\s\-xX]{5,}/.test(item) && pRek === "") pRek = cleanRekeningOcr(item);
                 else if (isBankName(item) && pBank === "") pBank = cleanBankName(item);
                 else if (item.length > 3 && pNama === "") pNama = cleanName(item);
             }
-            if (pRek === "") { for (let item of pengirimData) { if (isBankName(item)) continue; if ((item.match(/\d/g) || []).length >= 2) { pRek = cleanRekeningOcr(item); break; } } }
-
             let tNama = "", tRek = "", tBank = "";
             for (let item of tujuanData) {
-                if (isBankAccount(item) && tRek === "") tRek = cleanRekeningOcr(item);
+                if (/[\d\*\.\s\-xX]{5,}/.test(item) && tRek === "") tRek = cleanRekeningOcr(item);
                 else if (isBankName(item) && tBank === "") tBank = cleanBankName(item);
                 else if (item.length > 3 && tNama === "") tNama = cleanName(item);
             }
-            if (tRek === "") { for (let item of tujuanData) { if (isBankName(item)) continue; if ((item.match(/\d/g) || []).length >= 2) { tRek = cleanRekeningOcr(item); break; } } }
 
-            if (pNama) document.getElementById('in-pengirim-nama').value = pNama;
-            if (pRek) document.getElementById('in-pengirim-rek').value = pRek;
-            if (tNama) document.getElementById('in-tujuan-nama').value = tNama;
+            if (pRek) document.getElementById('in-f1').value = pRek; else if(pBank) document.getElementById('in-f1').value = pBank;
+            if (pNama) document.getElementById('in-f2').value = pNama;
+            
             if (tRek) document.getElementById('in-tujuan-rek').value = tRek;
+            if (tNama) document.getElementById('in-tujuan-nama').value = tNama;
             if (tBank) document.getElementById('in-tujuan-bank').value = tBank;
 
-            if (jenisTransaksiAktif === 'ewallet' && noHpMatch) {
-                const tujuanNamaEl = document.getElementById('in-tujuan-nama');
-                if (!tujuanNamaEl.value) tujuanNamaEl.value = noHpMatch[0];
-            }
-
-            const noPelangganEl = document.getElementById('in-no-pelanggan');
-            if (noPelangganEl && jenisTransaksiAktif === 'tagihan') {
+            // E-Wallet specific HP
+            const noHpMatch = dataText.match(/\b(0|62)8[0-9]{8,11}\b/);
+            if(jenisTransaksiAktif === 'ewallet' && noHpMatch && !tRek) document.getElementById('in-tujuan-rek').value = noHpMatch[0];
+            
+            // Tagihan Specific
+            if (jenisTransaksiAktif === 'tagihan') {
                 const noPelangganMatch = dataText.match(/(?:id\s*pelanggan|no\.?\s*pelanggan|nomor\s*meter|nomor\s*token|customer\s*id)[:\s]*([\w\-]{4,})/i);
-                if (noPelangganMatch) noPelangganEl.value = noPelangganMatch[1];
+                if (noPelangganMatch) document.getElementById('in-tujuan-rek').value = noPelangganMatch[1];
             }
-
-            syncPreviewData();
         }
 
+        // PREVIEW & MODAL
+        function sinkronisasiStruk() {
+            const val = (id) => document.getElementById(id).value || '-';
+            
+            document.getElementById('out-tanggal').innerText = val('in-tanggal');
+            document.getElementById('out-ref').innerText = val('in-ref');
+            
+            const nom = document.getElementById('in-nominal').value || '0';
+            const adm = document.getElementById('in-admin').value || '0';
+            document.getElementById('out-nominal').innerText = 'Rp ' + formatRibuan(nom);
+            document.getElementById('out-admin').innerText = 'Rp ' + formatRibuan(adm);
+            let total = (parseInt(String(nom).replace(/\D/g, '')) || 0) + (parseInt(String(adm).replace(/\D/g, '')) || 0);
+            document.getElementById('out-total').innerText = 'Rp ' + total.toLocaleString('id-ID');
+
+            const outF1 = document.getElementById('row-out-f1');
+            const outF2 = document.getElementById('row-out-f2');
+            const outTujuanRek = document.getElementById('row-out-tujuan-rek');
+            const outTujuanNama = document.getElementById('row-out-tujuan-nama');
+            const outTujuanBank = document.getElementById('row-out-tujuan-bank');
+            const outTarif = document.getElementById('row-out-tarif');
+            const outKwh = document.getElementById('row-out-kwh');
+            const outToken = document.getElementById('block-out-no-pelanggan');
+
+            if(jenisTransaksiAktif === 'listrik') {
+                document.getElementById('out-judul').innerText = "STRUK TOKEN LISTRIK";
+                document.getElementById('lbl-out-f1').innerText = "ID Pelanggan";
+                document.getElementById('lbl-out-f2').innerText = "Nama Pelanggan";
+                document.getElementById('out-f1').innerText = val('in-f1');
+                document.getElementById('out-f2').innerText = val('in-f2');
+                
+                outF1.style.display = 'flex'; outF2.style.display = 'flex';
+                outTarif.style.display = 'flex'; outKwh.style.display = 'flex';
+                outTujuanRek.style.display = 'none'; outTujuanNama.style.display = 'none'; outTujuanBank.style.display = 'none';
+                outToken.style.display = 'block';
+
+                document.getElementById('out-tarif').innerText = val('in-tarif-daya');
+                document.getElementById('out-kwh').innerText = val('in-jml-kwh');
+                let tokenRaw = val('in-token').replace(/\D/g,'');
+                document.getElementById('out-no-pelanggan').innerText = tokenRaw.match(/.{1,4}/g)?.join('-') || '-';
+                
+            } else {
+                outTarif.style.display = 'none'; outKwh.style.display = 'none';
+                
+                outF1.style.display = 'flex'; outF2.style.display = 'flex';
+                outTujuanRek.style.display = 'flex'; outTujuanNama.style.display = 'flex'; outTujuanBank.style.display = 'flex';
+                
+                if(jenisTransaksiAktif === 'transfer') {
+                    document.getElementById('out-judul').innerText = "BUKTI TRANSFER";
+                    document.getElementById('lbl-out-f1').innerText = "Rek Pengirim";
+                    document.getElementById('lbl-out-f2').innerText = "Nama Pengirim";
+                    outToken.style.display = 'none';
+                } else if(jenisTransaksiAktif === 'ewallet') {
+                    document.getElementById('out-judul').innerText = "BUKTI TOPUP E-WALLET";
+                    document.getElementById('lbl-out-f1').innerText = "Sumber Dana";
+                    document.getElementById('lbl-out-f2').innerText = "Nama Akun";
+                    outToken.style.display = 'none';
+                } else {
+                    document.getElementById('out-judul').innerText = "BUKTI PEMBAYARAN";
+                    document.getElementById('lbl-out-f1').innerText = "Sumber Dana";
+                    document.getElementById('lbl-out-f2').innerText = "Pembayar";
+                    outToken.style.display = 'block';
+                    document.getElementById('out-no-pelanggan').innerText = val('in-token');
+                }
+
+                document.getElementById('out-f1').innerText = val('in-f1');
+                document.getElementById('out-f2').innerText = val('in-f2');
+                document.getElementById('out-tujuan-rek').innerText = val('in-tujuan-rek');
+                document.getElementById('out-tujuan-nama').innerText = val('in-tujuan-nama');
+                document.getElementById('out-tujuan-bank').innerText = val('in-tujuan-bank');
+            }
+        }
+
+        function bukaModalStruk() {
+            const nominal = document.getElementById('in-nominal').value;
+            if (!nominal || parseInt(nominal.replace(/\D/g, '')) <= 0) { showToast('Isi Nominal terlebih dahulu!', 'error'); return; }
+            sinkronisasiStruk();
+            document.getElementById('modal-struk').style.display = 'flex';
+        }
+        function tutupModalStruk() { document.getElementById('modal-struk').style.display = 'none'; }
+
+        // BLUETOOTH PRINTING
         const PRINTER_PROFILES = [
-            { name: 'CC41', service: '49535343-fe7d-4ae5-8fa9-9fafd205e455', write: '49535343-8841-43f4-a8d4-ecbe34729bb3' },
-            { name: 'Generic FF00', service: '0000ff00-0000-1000-8000-00805f9b34fb', write: '0000ff02-0000-1000-8000-00805f9b34fb' },
-            { name: 'Generic 18F0', service: '000018f0-0000-1000-8000-00805f9b34fb', write: '00002af1-0000-1000-8000-00805f9b34fb' }
+            { service: '49535343-fe7d-4ae5-8fa9-9fafd205e455', write: '49535343-8841-43f4-a8d4-ecbe34729bb3' },
+            { service: '0000ff00-0000-1000-8000-00805f9b34fb', write: '0000ff02-0000-1000-8000-00805f9b34fb' },
+            { service: '000018f0-0000-1000-8000-00805f9b34fb', write: '00002af1-0000-1000-8000-00805f9b34fb' }
         ];
 
-        let printerConn = { device: null, characteristic: null, profile: null };
-
-        function setPrinterButtonState(connected, label) {
-            const btn = document.getElementById('btn-printer');
-            const labelEl = document.getElementById('printer-label');
-            btn.classList.toggle('connected', connected);
-            labelEl.innerText = label;
-        }
-
-        async function connectToPrinter() {
-            const device = await navigator.bluetooth.requestDevice({ acceptAllDevices: true, optionalServices: PRINTER_PROFILES.map(p => p.service) });
-            showToast('Menghubungkan ke ' + (device.name || 'printer') + '...', 'info', 2000);
-            device.addEventListener('gattserverdisconnected', () => { printerConn = { device: null, characteristic: null, profile: null }; setPrinterButtonState(false, 'Printer'); });
-            const server = await device.gatt.connect();
-            for (const profile of PRINTER_PROFILES) {
-                try {
-                    const service = await server.getPrimaryService(profile.service);
-                    const characteristic = await service.getCharacteristic(profile.write);
-                    printerConn = { device, characteristic, profile };
-                    setPrinterButtonState(true, 'Terhubung');
-                    showToast('Printer terhubung!', 'success');
-                    return printerConn;
-                } catch (err) { continue; }
-            }
-            throw new Error('Gagal menghubungkan ke perangkat cetak.');
-        }
-
-        async function writeInChunks(characteristic, bytes, chunkSize = 20, delayMs = 25) {
-            for (let i = 0; i < bytes.length; i += chunkSize) {
-                const chunk = bytes.slice(i, i + chunkSize);
-                if (characteristic.properties && characteristic.properties.writeWithoutResponse) { await characteristic.writeValueWithoutResponse(chunk); }
-                else { await characteristic.writeValue(chunk); }
-                await new Promise(res => setTimeout(res, delayMs));
-            }
-        }
-
-        const PAPER_WIDTH = 32;
-        
-        function padLabelValue(label, value, width = PAPER_WIDTH) {
-            label = String(label || '');
-            value = String(value || '-');
-            let paddedLabel = label.padEnd(14, ' ');
-            return paddedLabel + ': ' + value;
-        }
-
-        function buildReceiptEscPos() {
-            const get = (id) => document.getElementById(id).value || '-';
-            const nominal = formatRibuan(document.getElementById('in-nominal').value || '0');
-            const admin = formatRibuan(document.getElementById('in-admin').value || '0');
-            const total = document.getElementById('out-total').innerText.replace('Rp', '').trim();
-            const line = '-'.repeat(PAPER_WIDTH);
-            const cfg = KONFIGURASI_JENIS[jenisTransaksiAktif] || KONFIGURASI_JENIS.transfer;
-
-            let t = "\x1B\x40";
-            t += "\x1B\x61\x01";
-            t += "\x1B\x21\x10";
-            t += "MUSTAKIM MINI ATM\n";
-            t += "\x1B\x21\x00";
-            t += cfg.judulStruk + "\n";
-            t += line + "\n";
-
-            t += "\x1B\x61\x00";
-            t += padLabelValue('Tanggal', get('in-tanggal')) + "\n";
-            t += padLabelValue('ID TRX', get('in-ref')) + "\n";
-            t += line + "\n";
-
-            if (jenisTransaksiAktif === 'listrik') {
-                t += padLabelValue('NAMA PELANGGAN', get('in-pengirim-nama')) + "\n";
-                t += padLabelValue('SUMBER DANA', get('in-pengirim-rek')) + "\n";
-                t += padLabelValue('ID PELANGGAN', get('in-tujuan-nama')) + "\n";
-                t += padLabelValue('JUMLAH KWH', get('in-tujuan-rek')) + "\n";
-                t += padLabelValue('PRODUK', get('in-tujuan-bank')) + "\n";
-
-                t += line + "\n";
-                const noPelangganFormatted = formatNoPelangganTampil(get('in-no-pelanggan'));
-                t += "\x1B\x61\x01";
-                t += "** Serial Number **\n";
-                t += "\x1B\x45\x01";
-                if (noPelangganFormatted.length <= 16) { t += "\x1B\x21\x10"; t += noPelangganFormatted + "\n"; t += "\x1B\x21\x00"; }
-                else { t += noPelangganFormatted + "\n"; }
-                t += "\x1B\x45\x00";
-                t += "\x1B\x61\x00";
-                t += line + "\n";
-            } else {
-                t += cfg.labelPengirim + "\n";
-                t += padLabelValue('Nama', get('in-pengirim-nama')) + "\n";
-                t += padLabelValue('Rek', get('in-pengirim-rek')) + "\n";
-                t += line + "\n";
-
-                t += cfg.labelTujuan + "\n";
-                t += padLabelValue('Nama', get('in-tujuan-nama')) + "\n";
-                t += padLabelValue('Rek', get('in-tujuan-rek')) + "\n";
-                t += padLabelValue('Bank', get('in-tujuan-bank')) + "\n";
-
-                if (cfg.showNoPelanggan) {
-                    const noPelangganFormatted = formatNoPelangganTampil(get('in-no-pelanggan'));
-                    t += "\x1B\x61\x01"; 
-                    t += "** Serial Number **\n"; 
-                    t += "\x1B\x45\x01";
-                    if (noPelangganFormatted.length <= 16) { t += "\x1B\x21\x10"; t += noPelangganFormatted + "\n"; t += "\x1B\x21\x00"; }
-                    else { t += noPelangganFormatted + "\n"; }
-                    t += "\x1B\x45\x00"; t += "\x1B\x61\x00";
+        async function connectToPrinterWrapper() {
+            try {
+                if(!navigator.bluetooth) throw new Error("Browser tidak mendukung bluetooth");
+                const device = await navigator.bluetooth.requestDevice({ acceptAllDevices: true, optionalServices: PRINTER_PROFILES.map(p => p.service) });
+                const server = await device.gatt.connect();
+                for (const profile of PRINTER_PROFILES) {
+                    try {
+                        const service = await server.getPrimaryService(profile.service);
+                        const characteristic = await service.getCharacteristic(profile.write);
+                        printerConn = { device, characteristic, profile };
+                        document.getElementById('hdr-printer-icon').style.color = '#a7f3d0';
+                        showToast('Printer terhubung!', 'success');
+                        return;
+                    } catch (e) {}
                 }
-                t += line + "\n";
-            }
-
-            t += padLabelValue('Nominal', 'Rp ' + nominal) + "\n";
-            t += padLabelValue('Admin', 'Rp ' + admin) + "\n";
-            t += "\x1B\x45\x01";
-            // Perubahan label cetak menjadi TOTAL
-            t += padLabelValue('TOTAL', 'Rp ' + total) + "\n";
-            t += "\x1B\x45\x00";
-            t += line + "\n";
-
-            t += "\x1B\x61\x01";
-            t += "Transaksi berhasil\n";
-            t += "Terima kasih telah\nmenggunakan layanan kami\n";
-            t += "=".repeat(PAPER_WIDTH) + "\n";
-            t += "\n\n\n";
-
-            return t;
+            } catch(e) { showToast('Gagal menghubungkan printer.', 'error'); }
         }
 
-        function validateBeforePrint() {
-            const nominal = document.getElementById('in-nominal').value;
-            if (!nominal || parseInt(nominal.replace(/\D/g, '')) <= 0) { showToast('Nominal belum diisi.', 'error', 3500); return false; }
-            return true;
+        function padLabelValue(label, value) {
+            return String(label || '').padEnd(14, ' ') + ': ' + String(value || '-');
         }
 
         async function printReceiptBluetooth() {
-            if (!navigator.bluetooth) { showToast('Browser ini tidak mendukung Web Bluetooth.', 'error', 4000); return; }
-            if (!validateBeforePrint()) return;
-            const btn = document.getElementById('btn-printer');
-            btn.disabled = true;
-            try {
-                if (!printerConn.characteristic || !printerConn.device || !printerConn.device.gatt.connected) { await connectToPrinter(); }
-                showToast('Mengirim struk ke printer...', 'info', 2000);
-                const receiptText = buildReceiptEscPos();
-                const encoder = new TextEncoder();
-                const bytes = encoder.encode(receiptText);
-                await writeInChunks(printerConn.characteristic, bytes);
-                showToast('Struk berhasil dicetak!', 'success');
-            } catch (error) {
-                console.error(error);
-                let msg = 'Gagal mencetak. Pastikan Bluetooth aktif & printer menyala.';
-                if (error && error.name === 'NotFoundError') msg = 'Tidak ada printer dipilih.';
-                showToast(msg, 'error', 4000);
-                setPrinterButtonState(false, 'Printer');
-            } finally { btn.disabled = false; }
-        }
-
-        function switchPage(page) {
-            document.querySelectorAll('.page').forEach(p => p.classList.add('hidden'));
-            document.querySelectorAll('.nav-item').forEach(n => n.classList.remove('active'));
-            document.getElementById('page-' + page).classList.remove('hidden');
-            if (page === 'scan') document.getElementById('nav-pindai').classList.add('active');
-            else if (page === 'dokumen') document.getElementById('nav-dokumen').classList.add('active');
-            else if (page === 'riwayat') {
-                document.getElementById('nav-riwayat').classList.add('active');
-                loadRiwayat();
+            if (!printerConn.characteristic || !printerConn.device || !printerConn.device.gatt.connected) { 
+                await connectToPrinterWrapper(); 
+                if(!printerConn.characteristic) return;
             }
+            
+            const get = (id) => document.getElementById(id).value || '-';
+            let t = "\x1B\x40\x1B\x61\x01\x1B\x21\x10MUSTAKIM CELL\n\x1B\x21\x00";
+            
+            if(jenisTransaksiAktif === 'listrik') t += "STRUK TOKEN LISTRIK\n";
+            else if(jenisTransaksiAktif === 'transfer') t += "BUKTI TRANSFER\n";
+            else t += "BUKTI PEMBAYARAN\n";
+            
+            t += "--------------------------------\n\x1B\x61\x00";
+            t += padLabelValue('Tanggal', get('in-tanggal')) + "\n";
+            t += padLabelValue('ID TRX', get('in-ref')) + "\n";
+            t += "--------------------------------\n";
+
+            if (jenisTransaksiAktif === 'listrik') {
+                t += padLabelValue('ID PELANGGAN', get('in-f1')) + "\n";
+                t += padLabelValue('NAMA', get('in-f2')) + "\n";
+                t += padLabelValue('TARIF/DAYA', get('in-tarif-daya')) + "\n";
+                t += padLabelValue('JML KWH', get('in-jml-kwh')) + "\n";
+                t += "--------------------------------\n\x1B\x61\x01** Serial Number **\n\x1B\x45\x01";
+                const token = get('in-token').replace(/\D/g,'').match(/.{1,4}/g)?.join('-') || '-';
+                if(token.length <= 16) t += "\x1B\x21\x10" + token + "\n\x1B\x21\x00"; else t += token + "\n";
+                t += "\x1B\x45\x00\x1B\x61\x00--------------------------------\n";
+            } else {
+                t += padLabelValue(jenisTransaksiAktif==='transfer'?'REK PENGIRIM':'SUMBER DANA', get('in-f1')) + "\n";
+                t += padLabelValue('NAMA', get('in-f2')) + "\n";
+                t += "--------------------------------\n";
+                t += padLabelValue('REK TUJUAN', get('in-tujuan-rek')) + "\n";
+                t += padLabelValue('NAMA TUJUAN', get('in-tujuan-nama')) + "\n";
+                t += padLabelValue('BANK/PRODUK', get('in-tujuan-bank')) + "\n";
+                if(jenisTransaksiAktif==='tagihan') {
+                    t += "--------------------------------\n\x1B\x61\x01** Serial Number **\n\x1B\x45\x01" + get('in-token') + "\n\x1B\x45\x00\x1B\x61\x00";
+                }
+                t += "--------------------------------\n";
+            }
+
+            const total = document.getElementById('out-total').innerText.replace('Rp', '').trim();
+            t += padLabelValue('Nominal', 'Rp ' + formatRibuan(get('in-nominal'))) + "\n";
+            t += padLabelValue('Admin', 'Rp ' + formatRibuan(get('in-admin'))) + "\n";
+            t += "\x1B\x45\x01" + padLabelValue('TOTAL', 'Rp ' + total) + "\n\x1B\x45\x00--------------------------------\n";
+            t += "\x1B\x61\x01Transaksi berhasil\nTerima kasih telah\nmenggunakan layanan kami\n================================\n\n\n";
+
+            try {
+                const bytes = new TextEncoder().encode(t);
+                for (let i = 0; i < bytes.length; i += 20) {
+                    const chunk = bytes.slice(i, i + 20);
+                    if (printerConn.characteristic.properties.writeWithoutResponse) await printerConn.characteristic.writeValueWithoutResponse(chunk);
+                    else await printerConn.characteristic.writeValue(chunk);
+                    await new Promise(r => setTimeout(r, 25));
+                }
+                showToast('Struk dicetak!', 'success');
+            } catch(e) { showToast('Gagal mencetak.', 'error'); }
         }
 
-        function isApiConfigured() { return API_URL && !API_URL.includes('GANTI_DENGAN_URL_WEB_APP_ANDA'); }
-
+        // SAVE & SHARE
         async function simpanKeRiwayat() {
-            if (!isApiConfigured()) { showToast('API belum dikonfigurasi.', 'error', 4000); return; }
-            if (!validateBeforePrint()) return;
+            if (!API_URL || API_URL.includes('GANTI_DENGAN_URL')) { showToast('API belum diatur.', 'error'); return; }
             const payload = {
-                jenis: jenisTransaksiAktif,
-                tanggal: document.getElementById('in-tanggal').value,
-                ref: document.getElementById('in-ref').value,
-                pengirim: document.getElementById('in-pengirim-nama').value,
-                rekPengirim: document.getElementById('in-pengirim-rek').value,
-                tujuan: document.getElementById('in-tujuan-nama').value,
-                rekTujuan: document.getElementById('in-tujuan-rek').value,
-                bank: document.getElementById('in-tujuan-bank').value,
-                noPelanggan: document.getElementById('in-no-pelanggan').value,
-                nominal: document.getElementById('in-nominal').value,
-                admin: document.getElementById('in-admin').value
+                jenis: jenisTransaksiAktif, tanggal: document.getElementById('in-tanggal').value, ref: document.getElementById('in-ref').value,
+                pengirim: document.getElementById('in-f2').value, rekPengirim: document.getElementById('in-f1').value,
+                tujuan: document.getElementById('in-tujuan-nama').value, rekTujuan: document.getElementById('in-tujuan-rek').value, bank: document.getElementById('in-tujuan-bank').value,
+                noPelanggan: document.getElementById('in-token').value, nominal: document.getElementById('in-nominal').value, admin: document.getElementById('in-admin').value
             };
             try {
-                showToast('Menyimpan transaksi...', 'info', 2000);
+                showToast('Menyimpan...', 'info');
                 const res = await fetch(API_URL, { method: 'POST', headers: { 'Content-Type': 'text/plain;charset=utf-8' }, body: JSON.stringify(payload) });
-                const result = await res.json();
-                if (result.status === 'success') showToast('Transaksi tersimpan ke riwayat.', 'success');
-                else showToast('Gagal menyimpan.', 'error', 4000);
-            } catch (error) { showToast('Gagal terhubung ke server riwayat.', 'error', 4000); }
+                if ((await res.json()).status === 'success') showToast('Tersimpan di Riwayat!', 'success');
+            } catch (error) { showToast('Gagal menyimpan ke server.', 'error'); }
         }
 
-        function formatNoPelangganTampil(raw) {
-            const clean = String(raw || '').replace(/\s|-/g, '');
-            if (!clean) return '-';
-            return clean.match(/.{1,4}/g)?.join('-') || clean;
-        }
-
-        async function renderReceiptAsImage() {
-            const receiptEl = document.getElementById('printable-receipt');
-            const tabPreview = document.getElementById('tab-preview');
-            const tabEdit = document.getElementById('tab-edit');
-            const previewWasHidden = tabPreview.style.display !== 'flex';
-            const editWasVisible = tabEdit.style.display !== 'none';
-            if (previewWasHidden) { tabPreview.style.display = 'flex'; tabEdit.style.display = 'none'; }
-            syncPreviewData();
-            await new Promise(resolve => setTimeout(resolve, 50));
-            let canvas;
-            try { canvas = await html2canvas(receiptEl, { backgroundColor: '#ffffff', scale: 2, useCORS: true, logging: false }); }
-            finally { if (previewWasHidden) { tabPreview.style.display = 'none'; tabEdit.style.display = editWasVisible ? 'flex' : 'none'; } }
-            return new Promise((resolve, reject) => { canvas.toBlob((blob) => { if (blob) resolve(blob); else reject(new Error('Gagal')); }, 'image/png'); });
-        }
-
-        function downloadBlob(blob, filename) {
-            const url = URL.createObjectURL(blob);
-            const a = document.createElement('a'); a.href = url; a.download = filename;
-            document.body.appendChild(a); a.click(); document.body.removeChild(a); setTimeout(() => URL.revokeObjectURL(url), 1000);
-        }
-
-        async function shareKeWhatsApp(btnEl) {
-            if (!validateBeforePrint()) return;
-            const originalHtml = btnEl ? btnEl.innerHTML : null;
-            if (btnEl) { btnEl.disabled = true; btnEl.innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i> Proses...'; }
+        async function shareKeWhatsApp(btn) {
+            const ori = btn.innerHTML; btn.innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i> Loading...';
             try {
-                const blob = await renderReceiptAsImage();
-                const filename = `struk-${(document.getElementById('in-ref').value || 'mustakim').replace(/\s/g, '')}.png`;
-                const file = new File([blob], filename, { type: 'image/png' });
-                if (navigator.share && navigator.canShare && navigator.canShare({ files: [file] })) {
-                    await navigator.share({ files: [file], title: 'Struk Mustakim Mini ATM', text: 'Bukti transaksi' });
-                    showToast('Struk siap dibagikan.', 'success');
-                } else {
-                    downloadBlob(blob, filename); showToast('Gambar diunduh. Silakan kirim manual via WA.', 'info', 4500);
-                }
-            } catch (error) { if (error.name !== 'AbortError') showToast('Gagal membuat gambar struk.', 'error', 4000); }
-            finally { if (btnEl && originalHtml) { btnEl.disabled = false; btnEl.innerHTML = originalHtml; } }
+                const canvas = await html2canvas(document.getElementById('printable-receipt'), { backgroundColor: '#ffffff', scale: 2 });
+                canvas.toBlob(async (blob) => {
+                    const file = new File([blob], `struk-${Date.now()}.png`, { type: 'image/png' });
+                    if (navigator.share && navigator.canShare({ files: [file] })) {
+                        await navigator.share({ files: [file], title: 'Struk', text: 'Bukti transaksi' });
+                    } else {
+                        const url = URL.createObjectURL(blob);
+                        const a = document.createElement('a'); a.href = url; a.download = file.name; a.click(); URL.revokeObjectURL(url);
+                        showToast('Struk diunduh, kirim manual via WA', 'info');
+                    }
+                    btn.innerHTML = ori;
+                }, 'image/png');
+            } catch(e) { btn.innerHTML = ori; showToast('Gagal membuat gambar.', 'error'); }
         }
 
+        // PAGE 2: SCAN DOKUMEN PDF/IMG
+        document.getElementById('doc-input-file').addEventListener('change', async function(e) {
+            const file = e.target.files[0]; if (!file) return;
+            const loader = document.getElementById('loader');
+            loader.style.display = 'flex'; document.getElementById('loader-title').innerText = "Memproses...";
+            
+            if (file.type === 'application/pdf') {
+                try {
+                    const typedarray = new Uint8Array(await file.arrayBuffer());
+                    pdfjsLib.GlobalWorkerOptions.workerSrc = 'https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.worker.min.js';
+                    const pdf = await pdfjsLib.getDocument(typedarray).promise;
+                    const page = await pdf.getPage(1);
+                    const viewport = page.getViewport({ scale: 2.0 });
+                    const canvas = document.createElement('canvas'); const ctx = canvas.getContext('2d');
+                    canvas.height = viewport.height; canvas.width = viewport.width;
+                    await page.render({ canvasContext: ctx, viewport: viewport }).promise;
+                    jalankanOcrDokumen(canvas.toDataURL('image/png'));
+                } catch(err) { loader.style.display = 'none'; showToast('Gagal membaca PDF', 'error'); }
+            } else {
+                const reader = new FileReader();
+                reader.onload = (event) => jalankanOcrDokumen(event.target.result);
+                reader.readAsDataURL(file);
+            }
+            e.target.value = '';
+        });
+
+        function jalankanOcrDokumen(imageSrc) {
+            const lang = document.getElementById('doc-lang').value;
+            Tesseract.recognize(imageSrc, lang)
+            .then(({ data: { text } }) => {
+                document.getElementById('loader').style.display = 'none';
+                document.getElementById('doc-result-section').style.display = 'flex';
+                document.getElementById('doc-text').value = text;
+                showToast('Teks berhasil diekstrak!', 'success');
+            }).catch(err => { document.getElementById('loader').style.display = 'none'; showToast('Gagal scan dokumen.', 'error'); });
+        }
+        function saveAsTXT() {
+            const text = document.getElementById('doc-text').value; if(!text) return;
+            const a = document.createElement('a'); a.href = URL.createObjectURL(new Blob([text], {type: 'text/plain'})); a.download = `Doc_${Date.now()}.txt`; a.click();
+        }
+        function saveAsPDF() {
+            const text = document.getElementById('doc-text').value; if(!text || !window.jspdf) return;
+            const doc = new window.jspdf.jsPDF(); doc.text(doc.splitTextToSize(text, 180), 15, 15); doc.save(`Doc_${Date.now()}.pdf`);
+        }
+
+        // PAGE 3: RIWAYAT
         async function loadRiwayat() {
-            const loadingEl = document.getElementById('riwayat-loading');
-            const emptyEl = document.getElementById('riwayat-empty');
-            const listEl = document.getElementById('riwayat-list');
-            listEl.innerHTML = ''; emptyEl.style.display = 'none'; loadingEl.style.display = 'block';
-            if (!isApiConfigured()) { loadingEl.style.display = 'none'; emptyEl.style.display = 'block'; emptyEl.querySelector('p').innerText = 'API belum dikonfigurasi.'; return; }
+            const listEl = document.getElementById('riwayat-list'); const emptyEl = document.getElementById('riwayat-empty'); const loadEl = document.getElementById('riwayat-loading');
+            listEl.innerHTML = ''; emptyEl.style.display = 'none'; loadEl.style.display = 'block';
+            if (!API_URL || API_URL.includes('GANTI_DENGAN_URL')) { loadEl.style.display = 'none'; emptyEl.style.display = 'block'; return; }
             try {
-                const res = await fetch(API_URL + '?action=riwayat');
-                const result = await res.json();
-                loadingEl.style.display = 'none';
-                if (result.status !== 'success' || !result.data || result.data.length === 0) { emptyEl.style.display = 'block'; return; }
-                result.data.forEach(trx => {
-                    const card = document.createElement('div');
-                    card.className = 'riwayat-card';
-                    const jenisLabel = (KONFIGURASI_JENIS[trx.jenis] || KONFIGURASI_JENIS.transfer).judulStruk;
-                    
-                    // Modifikasi agar riwayat juga menampilkan tulisan Total, bukan Untung
-                    const totalHitung = (parseInt(trx.nominal) || 0) + (parseInt(trx.admin) || 0);
-
+                const res = await (await fetch(API_URL + '?action=riwayat')).json();
+                loadEl.style.display = 'none';
+                if (res.status !== 'success' || !res.data.length) { emptyEl.style.display = 'block'; return; }
+                res.data.forEach(trx => {
+                    const total = (parseInt(trx.nominal) || 0) + (parseInt(trx.admin) || 0);
+                    const card = document.createElement('div'); card.className = 'riwayat-card';
                     card.innerHTML = `
-                        <div class="riwayat-card-top">
-                            <div>
-                                <span class="riwayat-nominal">Total: Rp ${formatRibuan(totalHitung)}</span>
-                                <div style="font-size:10px; color:var(--primary); font-weight:600; text-transform:uppercase; margin-top:2px;">${jenisLabel}</div>
-                            </div>
-                            <span class="riwayat-tanggal">${trx.tanggal || '-'}</span>
+                        <div style="display:flex; justify-content:space-between; margin-bottom:10px;">
+                            <div><strong style="color:var(--primary); font-size:15px;">Total: Rp ${formatRibuan(total)}</strong><div style="font-size:11px; font-weight:600; color:#64748b; margin-top:3px; text-transform:uppercase;">${trx.jenis}</div></div>
+                            <span style="font-size:11px; color:#94a3b8;">${trx.tanggal || '-'}</span>
                         </div>
-                        <div class="riwayat-detail">
+                        <div style="font-size:12px; line-height:1.6; color:#334155;">
                             <div><b>Dari:</b> ${trx.pengirim || '-'}</div>
-                            <div><b>Ke:</b> ${trx.tujuan || '-'} (${trx.bank || '-'})</div>
-                            <div><b>Ref:</b> ${trx.ref || '-'}</div>
+                            <div><b>Ke:</b> ${trx.tujuan || '-'} ${trx.bank ? `(${trx.bank})` : ''}</div>
                         </div>
                     `;
                     listEl.appendChild(card);
                 });
-            } catch (error) { loadingEl.style.display = 'none'; emptyEl.style.display = 'block'; emptyEl.querySelector('p').innerText = 'Gagal memuat riwayat.'; }
+            } catch (error) { loadEl.style.display = 'none'; emptyEl.style.display = 'block'; }
         }
     </script>
 </body>
