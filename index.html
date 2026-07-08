@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>Mustakim Phone - Mini ATM & PPOB</title>
+    <title>Mustakim Cell - Mini ATM & PPOB</title>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=Space+Mono:wght@700&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
     
@@ -50,7 +50,7 @@
         }
 
         /* NAVIGATION TABS MENGAMBANG */
-        .trx-tabs-wrapper { margin-top: -45px; padding: 0 20px; position: relative; z-index: 10; }
+        .trx-tabs-wrapper { margin-top: -45px; padding: 0 12px; position: relative; z-index: 10; }
         .trx-tabs {
             display: flex; gap: 12px; overflow-x: auto; padding-bottom: 5px;
             scrollbar-width: none;
@@ -58,7 +58,7 @@
         .trx-tabs::-webkit-scrollbar { display: none; }
         .trx-tab {
             background: white; border: 1px solid var(--border-color);
-            border-radius: 14px; padding: 15px 10px; flex: 1; min-width: 105px;
+            border-radius: 12px; padding: 15px 10px; flex: 1; min-width: 105px;
             display: flex; flex-direction: column; align-items: center; gap: 8px;
             font-size: 13px; font-weight: 600; color: var(--text-muted);
             box-shadow: 0 4px 6px rgba(0,0,0,0.02); cursor: pointer; transition: 0.2s;
@@ -66,7 +66,7 @@
         .trx-tab i { font-size: 22px; }
         .trx-tab.active {
             background: var(--primary); border-color: var(--primary); color: white;
-            box-shadow: 0 6px 12px rgba(2, 132, 199, 0.3);
+            box-shadow: 0 6px 2px rgba(2, 132, 199, 0.3);
         }
 
         /* UPLOAD BOX DASHED */
@@ -138,7 +138,7 @@
         .modal-header h2 { font-size: 18px; font-weight: 700; color: var(--text-main); }
         .btn-close { background: #e2e8f0; border: none; width: 32px; height: 32px; border-radius: 50%; display: flex; justify-content: center; align-items: center; color: var(--text-muted); cursor: pointer; }
 
-        /* RECEIPT PAPER */
+        /* RECEIPT PAPER (SAMA SEPERTI SEBELUMNYA) */
         .receipt-paper { background: white; width: 100%; max-width: 300px; padding: 25px 15px; box-shadow: 0 10px 25px rgba(0, 0, 0, 0.1); font-family: 'Space Mono', monospace; font-size: 11px; color: #000; border-radius: 4px; border: 1px solid #e2e8f0; margin-bottom: 20px;}
         .receipt-center { text-align: center; margin-bottom: 12px; }
         .receipt-center h3 { font-size: 14px; font-weight: bold; margin-bottom: 4px; letter-spacing: 0.5px; }
@@ -150,7 +150,7 @@
         .r-colon { width: 12px; text-align: center; flex-shrink: 0; }
         .r-value { flex-grow: 1; text-align: left; word-break: break-word; }
         #block-out-no-pelanggan { display: none; text-align: center; margin: 18px 0; }
-        #out-no-pelanggan { font-weight: 700; font-size: 18px; letter-spacing: 1px; }
+        #out-no-pelanggan { font-weight: 700; font-size: 16px; letter-spacing: 1px; }
 
         .modal-actions { display: flex; gap: 12px; width: 100%; max-width: 300px; flex-direction: column;}
         .btn-action { padding: 14px; border-radius: 12px; font-weight: 700; border: none; cursor: pointer; display: flex; align-items: center; justify-content: center; gap: 8px; font-size: 14px; transition: 0.2s;}
@@ -192,7 +192,7 @@
         <!-- HEADER BERANDA -->
         <header class="header-curve">
             <div class="header-text">
-                <h1>Mustakim Cell</h1>
+                <h1>MUSTAKIM PHONE</h1>
                 <p>Mini ATM & PPOB</p>
             </div>
             <div class="wallet-icon" onclick="connectToPrinterWrapper()">
@@ -373,7 +373,7 @@
                 
                 <div class="receipt-paper" id="printable-receipt">
                     <div class="receipt-center">
-                        <h3>MUSTAKIM CELL</h3>
+                        <h3>MUSTAKIM PHONE</h3>
                         <p id="out-judul">STRUK TOKEN LISTRIK</p>
                     </div>
                     <div class="receipt-line"></div>
@@ -404,16 +404,17 @@
                     <div class="receipt-row bold"><div class="r-label">TOTAL</div><div class="r-colon">:</div><div class="r-value" id="out-total">Rp 0</div></div>
                     <div class="receipt-line"></div>
                     <div class="receipt-center" style="margin-top: 15px; color: #475569;">
+                        
                         <p>Terima kasih!<br>telah menggunakan layanan kami</p>
                         <p style="margin-top:8px">==============================</p>
                     </div>
                 </div>
 
-                <div class="modal-actions">
-                    <button class="btn-action primary" id="btn-printer" onclick="printReceiptBluetooth()"><i class="fa-solid fa-bluetooth"></i> Cetak Bluetooth</button>
+                <div class="modal-actions">    
                     <div class="row-flex">
                         <button class="btn-action outline" onclick="simpanKeRiwayat()"><i class="fa-solid fa-floppy-disk"></i> Simpan</button>
                         <button class="btn-action whatsapp" onclick="shareKeWhatsApp(this)"><i class="fa-brands fa-whatsapp"></i> Share</button>
+                        <button class="btn-action primary" id="hdr-printer-icon" onclick="printReceiptBluetooth()"><i class="fa-solid fa-print"></i> Cetak</button>
                     </div>
                 </div>
             </div>
